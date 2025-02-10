@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>餐桌 {{ table.table_number }} 的二维码</title>
+</head>
+<body>
+    <h1>餐桌 {{ table.table_number }} 的二维码</h1>
+    <img src="{{ table.qr_code.url }}" alt="QR Code for Table {{ table.table_number }}">
+    <p>扫描上面的二维码以访问餐桌菜单。</p>
+    <a href="{% url 'create_table' %}">返回创建餐桌</a>
+</body>
+</html>

@@ -1,7 +1,9 @@
+# qrcode_app/urls.py
+
 from django.urls import path
-from .views import generate_qr, scan_qr
+from .views import create_table, view_qr_code
 
 urlpatterns = [
-    path('generate/', generate_qr, name='generate_qr'),  # 生成二维码的 URL
-    path('scan/', scan_qr, name='scan_qr'),              # 扫描二维码的 URL
+    path('create/', create_table, name='create_table'),
+    path('qr_code/<str:table_number>/', view_qr_code, name='view_qr_code'),  # 确保这个路由存在
 ]
