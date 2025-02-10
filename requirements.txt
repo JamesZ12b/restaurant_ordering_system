@@ -1,0 +1,5 @@
+Django==4.2
+qrcode[pil]==7.3
+opencv-python==4.5.5.64
+numpy==1.23.5
+stripe==4.0.0
