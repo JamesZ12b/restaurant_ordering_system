@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>餐桌 {{ table.table_number }} 的二维码</title>
+    <title>Table {{ table.table_number }} QR Code</title>
 </head>
 <body>
-    <h1>餐桌 {{ table.table_number }} 的二维码</h1>
+    <h1>Table {{ table.table_number }} QR Code</h1>
     <img src="{{ table.qr_code.url }}" alt="QR Code for Table {{ table.table_number }}">
-    <p>扫描上面的二维码以访问餐桌菜单。</p>
-    <a href="{% url 'create_table' %}">返回创建餐桌</a>
+    <p>Scan the QR code above to access the table menu</p>
+    <a href="{% url 'table_list' %}">Return</a>
 </body>
 </html>

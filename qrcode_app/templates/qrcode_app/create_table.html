@@ -3,26 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>创建餐桌</title>
+    <title>Create table</title>
 </head>
 <body>
-    <h1>创建餐桌</h1>
+    <h1>Create table</h1>
     {% if error %}
-        <p style="color: red;">{{ error }}</p>
+        <div class="error">{{ error }}</div>
     {% endif %}
-
-    <form method="post">
+    {% if table_number %}
+        <div class="success">Table {{ table_number }} Sucess！</div>
+    {% endif %}
+    <form method="post" action="{% url 'create_table' %}">
         {% csrf_token %}
-        <label for="table_number">餐桌编号:</label>
+        <label for="table_number">Table number:</label>
         <input type="text" id="table_number" name="table_number" required>
-        <button type="submit">创建</button>
+        <input type="submit" value="Create table">
     </form>
-
-    <h2>查看二维码</h2>
-    <form method="get" action="{% url 'view_qr_code' table_number='1' %}">
-        <label for="qr_table_number">输入餐桌编号查看二维码:</label>
-        <input type="text" id="qr_table_number" name="table_number" required>
-        <button type="submit">查看二维码</button>
-    </form>
+    <a href="{% url 'table_list' %}">Return</a>
 </body>
 </html>
