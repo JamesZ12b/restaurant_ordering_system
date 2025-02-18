@@ -4,8 +4,7 @@ import os
 import qrcode
 from django.shortcuts import render, redirect
 from django.core.files.base import ContentFile
-from .models import Table
-
+from .models import Table, MenuItem
 
 # qrcode_app/views.py
 
@@ -23,7 +22,7 @@ def generate_qr_code(table_number):
 
     # 生成二维码
     qr = qrcode.QRCode(version=1, box_size=10, border=5)
-    qr.add_data(f"http://localhost:8000/table/{table_number}/")  # 假设这是餐桌的链接
+    qr.add_data(f"http://localhost:8000/table/menu/{table_number}/")  # 假设这是餐桌的链接
     qr.make(fit=True)
 
     img = qr.make_image(fill='black', back_color='white')
@@ -68,4 +67,14 @@ def view_qr_code(request, table_number):
 def table_list(request):
     tables = Table.objects.all()  # 获取所有餐桌
     return render(request, 'qrcode_app/table_list.html', {'tables': tables})
+
+# qrcode_app/views.py
+
+def menu_view(request, table_number):
+    # 获取所有菜单项
+    menu_items = MenuItem.objects.all()
+    return render(request, 'qrcode_app/menu.html', {
+        'table_number': table_number,
+        'menu_items': menu_items
+    })
 
