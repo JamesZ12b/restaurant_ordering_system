@@ -5,7 +5,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Restaurant Ordering System</title>
+    <title>Restaurant Ordering System - Responsive</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -20,22 +20,14 @@
             padding: 15px;
             font-size: 24px;
         }
-
-        .menu-item-image {
-            max-width: 250px; /* 最大宽度为容器宽度 */
-            max-height: 200px; /* 高度自动调整，保持比例 */
-            border: 2px solid #ccc; /* 边框 */
-            border-radius: 8px; /* 圆角 */
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* 阴影效果 */
-        }
-
-
         #table-info {
             text-align: center;
             font-size: 20px;
             color: #333;
             margin-top: 10px;
         }
+
+        /* Menu Category Container */
         .menu-category {
             width: 80%;
             max-width: 1200px;
@@ -49,6 +41,8 @@
             padding-left: 10px;
             border-left: 5px solid #27ae60;
         }
+
+        /* Menu Item Grid */
         .menu-container {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
@@ -66,10 +60,14 @@
         .menu-item:hover {
             transform: translateY(-5px);
         }
-        .menu-item img {
-            width: 100%;
-            height: 180px;
-            object-fit: cover;
+        .menu-item-image {
+            max-width: 250px;
+            max-height: 200px;
+            margin: 0 auto;
+            display: block;
+            border: 2px solid #ccc;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         }
         .menu-content {
             padding: 15px;
@@ -100,6 +98,8 @@
         .btn:hover {
             background: #219150;
         }
+
+        /* Cart Button (Floating) */
         .cart {
             position: fixed;
             bottom: 20px;
@@ -112,6 +112,8 @@
             font-size: 18px;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
         }
+
+        /* Cart Container */
         .cart-container {
             display: none;
             position: fixed;
@@ -123,13 +125,54 @@
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
             width: 300px;
         }
+
+        /* ========== Media Query for Mobile ========== */
+        @media (max-width: 767px) {
+            .header {
+                font-size: 20px;
+            }
+            #table-info {
+                font-size: 18px;
+                margin: 10px 0;
+            }
+            .category-title {
+                font-size: 20px;
+            }
+            .menu-container {
+                /* 手机端强制单列或双列布局，可根据需要调整 */
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+            .menu-item-image {
+                max-width: 100%;
+                height: auto;
+            }
+            .menu-content h3 {
+                font-size: 16px;
+            }
+            .menu-content p,
+            .menu-content .price {
+                font-size: 14px;
+            }
+            .btn {
+                padding: 8px;
+                font-size: 14px;
+            }
+            .cart {
+                font-size: 16px;
+                padding: 10px;
+            }
+            .cart-container {
+                width: 90%;
+                right: 5%;
+                bottom: 70px;
+            }
+        }
     </style>
 </head>
 <body>
 
     <div class="header">Online Restaurant Ordering System</div>
-
-    <!-- Display Table Information -->
     <h2 id="table-info">You are ordering from table {{ table_number }}</h2>
 
     <!-- 🍽 Main Courses -->
@@ -138,15 +181,15 @@
         <div class="menu-container">
             {% for item in menu_items %}
                 {% if item.category == "Main Course" %}
-                    <div class="menu-item">
-                        <img src="{{ item.image.url }}" alt="{{ item.name }}" class="menu-item-image">
-                        <div class="menu-content">
-                            <h3>{{ item.name }}</h3>
-                            <p>{{ item.description }}</p>
-                            <div class="price">$ {{ item.price }}</div>
-                            <button class="btn" onclick="addToCart('{{ item.name }}', {{ item.price }})">Add to Cart</button>
-                        </div>
+                <div class="menu-item">
+                    <img src="{{ item.image.url }}" alt="{{ item.name }}" class="menu-item-image">
+                    <div class="menu-content">
+                        <h3>{{ item.name }}</h3>
+                        <p>{{ item.description }}</p>
+                        <div class="price">$ {{ item.price }}</div>
+                        <button class="btn" onclick="addToCart('{{ item.name }}', {{ item.price }})">Add to Cart</button>
                     </div>
+                </div>
                 {% endif %}
             {% endfor %}
         </div>
@@ -158,15 +201,15 @@
         <div class="menu-container">
             {% for item in menu_items %}
                 {% if item.category == "Snack" %}
-                    <div class="menu-item">
-                        <img src="{{ item.image.url }}" alt="{{ item.name }}" class="menu-item-image">
-                        <div class="menu-content">
-                            <h3>{{ item.name }}</h3>
-                            <p>{{ item.description }}</p>
-                            <div class="price">$ {{ item.price }}</div>
-                            <button class="btn" onclick="addToCart('{{ item.name }}', {{ item.price }})">Add to Cart</button>
-                        </div>
+                <div class="menu-item">
+                    <img src="{{ item.image.url }}" alt="{{ item.name }}" class="menu-item-image">
+                    <div class="menu-content">
+                        <h3>{{ item.name }}</h3>
+                        <p>{{ item.description }}</p>
+                        <div class="price">$ {{ item.price }}</div>
+                        <button class="btn" onclick="addToCart('{{ item.name }}', {{ item.price }})">Add to Cart</button>
                     </div>
+                </div>
                 {% endif %}
             {% endfor %}
         </div>
@@ -178,15 +221,15 @@
         <div class="menu-container">
             {% for item in menu_items %}
                 {% if item.category == "Drink" %}
-                    <div class="menu-item">
-                        <img src="{{ item.image.url }}" alt="{{ item.name }}" class="menu-item-image">
-                        <div class="menu-content">
-                            <h3>{{ item.name }}</h3>
-                            <p>{{ item.description }}</p>
-                            <div class="price">$ {{ item.price }}</div>
-                            <button class="btn" onclick="addToCart('{{ item.name }}', {{ item.price }})">Add to Cart</button>
-                        </div>
+                <div class="menu-item">
+                    <img src="{{ item.image.url }}" alt="{{ item.name }}" class="menu-item-image">
+                    <div class="menu-content">
+                        <h3>{{ item.name }}</h3>
+                        <p>{{ item.description }}</p>
+                        <div class="price">$ {{ item.price }}</div>
+                        <button class="btn" onclick="addToCart('{{ item.name }}', {{ item.price }})">Add to Cart</button>
                     </div>
+                </div>
                 {% endif %}
             {% endfor %}
         </div>
@@ -198,15 +241,15 @@
         <div class="menu-container">
             {% for item in menu_items %}
                 {% if item.category == "Dessert" %}
-                    <div class="menu-item">
-                        <img src="{{ item.image.url }}" alt="{{ item.name }}" class="menu-item-image">
-                        <div class="menu-content">
-                            <h3>{{ item.name }}</h3>
-                            <p>{{ item.description }}</p>
-                            <div class="price">$ {{ item.price }}</div>
-                            <button class="btn" onclick="addToCart('{{ item.name }}', {{ item.price }})">Add to Cart</button>
-                        </div>
+                <div class="menu-item">
+                    <img src="{{ item.image.url }}" alt="{{ item.name }}" class="menu-item-image">
+                    <div class="menu-content">
+                        <h3>{{ item.name }}</h3>
+                        <p>{{ item.description }}</p>
+                        <div class="price">$ {{ item.price }}</div>
+                        <button class="btn" onclick="addToCart('{{ item.name }}', {{ item.price }})">Add to Cart</button>
                     </div>
+                </div>
                 {% endif %}
             {% endfor %}
         </div>
@@ -214,7 +257,6 @@
 
     <!-- 🛒 Shopping Cart -->
     <div class="cart" onclick="toggleCart()">🛒 View Cart</div>
-
     <div class="cart-container" id="cart-container">
         <h3>Shopping Cart</h3>
         <ul id="cart-list"></ul>
@@ -259,6 +301,5 @@
             alert('Checkout functionality not implemented yet.');
         }
     </script>
-
 </body>
 </html>
