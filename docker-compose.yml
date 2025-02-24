@@ -9,3 +9,5 @@ services:
       - .:/app
     environment:
       - PYTHONUNBUFFERED=1
+
+      
