@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Floor Layout</title>
+    <style>
+        .floor-map {
+            position: relative;
+            width: 800px;
+            height: 600px;
+            background-color: #f1f1f1;
+            margin: 0 auto;
+        }
+        .table-marker {
+            position: absolute;
+            width: 60px;
+            height: 60px;
+            background-color: #A0FB8F;
+            border: 2px solid #333;
+            border-radius: 8px;
+            text-align: center;
+            line-height: 60px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+<h1>Floor Layout</h1>
+
+<!-- 显示楼层名称，如有需要 -->
+{% for floor in floors %}
+  <h2>楼层: {{ floor.name }}</h2>
+{% endfor %}
+
+<!-- 地图区域 -->
+<div class="floor-map" id="floorMap"></div>
+
+<script>
+  var tables = [
+    {% for t in tables %}
+      {
+        id: "{{ t.table_number }}",
+        floor: "{{ t.floor.name|default_if_none:'N/A' }}",
+        x: {{ t.position_x }},
+        y: {{ t.position_y }}
+      }{% if not forloop.last %},{% endif %}
+    {% endfor %}
+  ];
+
+  var container = document.getElementById('floorMap');
+
+  tables.forEach(function(tbl) {
+    var marker = document.createElement('div');
+    marker.className = 'table-marker';
+    marker.style.left = tbl.x + 'px';
+    marker.style.top = tbl.y + 'px';
+    marker.innerText = tbl.id;
+
+    // 点击可跳转到查看该桌子二维码或菜单等
+    marker.onclick = function() {
+      window.location.href = '/table/' + tbl.id;  // 或者别的链接
+    }
+
+    container.appendChild(marker);
+  });
+</script>
+</body>
+</html>
