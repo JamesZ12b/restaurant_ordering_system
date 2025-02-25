@@ -4,7 +4,7 @@ import os
 import qrcode
 from django.shortcuts import render, redirect
 from django.core.files.base import ContentFile
-from .models import Table, MenuItem
+from .models import Table, MenuItem,Floor
 
 # qrcode_app/views.py
 
@@ -76,5 +76,16 @@ def menu_view(request, table_number):
     return render(request, 'qrcode_app/menu.html', {
         'table_number': table_number,
         'menu_items': menu_items
+    })
+
+def floor_layout(request):
+    """
+    返回楼层和座位布局到前端页面。
+    """
+    floors = Floor.objects.all()         # 如果需要显示楼层
+    tables = Table.objects.all()         # 拿到所有桌位
+    return render(request, 'floor_layout.html', {
+        'floors': floors,
+        'tables': tables
     })
 
