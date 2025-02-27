@@ -3,22 +3,78 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Create table</title>
+    <title>Create Table</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        .form-group {
+            margin-bottom: 1rem;
+        }
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #555;
+        }
+        input[type="text"] {
+            width: 100%;
+            padding: 0.5rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 1rem;
+        }
+        button {
+            background: #27ae60;
+            color: white;
+            border: none;
+            padding: 0.8rem 1.5rem;
+            border-radius: 4px;
+            cursor: pointer;
+            width: 100%;
+            font-size: 1rem;
+        }
+        button:hover {
+            background: #219150;
+        }
+        .back-link {
+            display: block;
+            text-align: center;
+            margin-top: 1rem;
+            color: #666;
+            text-decoration: none;
+        }
+        .back-link:hover {
+            color: #333;
+        }
+    </style>
 </head>
 <body>
-    <h1>Create table</h1>
-    {% if error %}
-        <div class="error">{{ error }}</div>
-    {% endif %}
-    {% if table_number %}
-        <div class="success">Table {{ table_number }} Sucess！</div>
-    {% endif %}
-    <form method="post" action="{% url 'create_table' %}">
-        {% csrf_token %}
-        <label for="table_number">Table number:</label>
-        <input type="text" id="table_number" name="table_number" required>
-        <input type="submit" value="Create table">
-    </form>
-    <a href="{% url 'table_list' %}">Return</a>
+    <div class="container">
+        <h1>Create New Table</h1>
+        <form method="POST" action="{% url 'create_table' %}">
+            {% csrf_token %}
+            <div class="form-group">
+                <label for="table_number">Table Number:</label>
+                <input type="text" id="table_number" name="table_number" required>
+            </div>
+            <button type="submit">Create Table</button>
+        </form>
+        <a href="{% url 'table_list' %}" class="back-link">Back to Table List</a>
+    </div>
 </body>
 </html>

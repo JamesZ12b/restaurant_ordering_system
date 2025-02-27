@@ -4,11 +4,104 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Table {{ table.table_number }} QR Code</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        .container {
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            text-align: center;
+            max-width: 500px;
+            width: 90%;
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 1.5rem;
+            font-size: 1.8rem;
+        }
+        .qr-code {
+            margin: 2rem 0;
+        }
+        .qr-code img {
+            max-width: 300px;
+            width: 100%;
+            height: auto;
+            border: 1px solid #eee;
+            border-radius: 8px;
+            padding: 10px;
+            background: white;
+        }
+        p {
+            color: #666;
+            margin: 1rem 0;
+            line-height: 1.5;
+        }
+        .button-group {
+            margin-top: 2rem;
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        .button {
+            display: inline-block;
+            padding: 0.8rem 1.5rem;
+            border-radius: 6px;
+            text-decoration: none;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+        .primary {
+            background-color: #27ae60;
+            color: white;
+        }
+        .primary:hover {
+            background-color: #219150;
+        }
+        .secondary {
+            background-color: #3498db;
+            color: white;
+        }
+        .secondary:hover {
+            background-color: #2980b9;
+        }
+        .download {
+            margin-top: 1rem;
+            display: block;
+            color: #666;
+            text-decoration: none;
+        }
+        .download:hover {
+            color: #333;
+            text-decoration: underline;
+        }
+    </style>
 </head>
 <body>
-    <h1>Table {{ table.table_number }} QR Code</h1>
-    <img src="{{ table.qr_code.url }}" alt="QR Code for Table {{ table.table_number }}">
-    <p>Scan the QR code above to access the table menu</p>
-    <a href="{% url 'table_list' %}">Return</a>
+    <div class="container">
+        <h1>QR Code for Table {{ table.table_number }}</h1>
+        <div class="qr-code">
+            <img src="{{ table.qr_code.url }}" alt="QR Code for Table {{ table.table_number }}">
+        </div>
+        <p>Scan this QR code to access the menu and place orders for Table {{ table.table_number }}</p>
+        <div class="button-group">
+            <a href="{% url 'menu' table.table_number %}" class="button primary">View Menu</a>
+            <a href="{% url 'table_list' %}" class="button secondary">Back to Tables</a>
+        </div>
+        <a href="{{ table.qr_code.url }}" download="table_{{ table.table_number }}_qr.png" class="download">
+            Download QR Code
+        </a>
+    </div>
 </body>
 </html>

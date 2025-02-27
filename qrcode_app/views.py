@@ -2,79 +2,141 @@
 
 import os
 import qrcode
+import stripe
+import json
 from django.shortcuts import render, redirect
 from django.core.files.base import ContentFile
-from .models import Table, MenuItem
+from django.conf import settings
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+from .models import Table, MenuItem, Order
 
-# qrcode_app/views.py
-
-import os
-from django.core.files.base import ContentFile
-from django.shortcuts import render, redirect, get_object_or_404
-from .models import Table
-import qrcode
-
-def generate_qr_code(table_number):
-    # 确保 qr_codes 目录存在
-    qr_code_dir = 'media/qr_codes'
-    if not os.path.exists(qr_code_dir):
-        os.makedirs(qr_code_dir)
-
-    # 生成二维码
-    qr = qrcode.QRCode(version=1, box_size=10, border=5)
-    qr.add_data(f"http://localhost:8000/table/menu/{table_number}/")  # 假设这是餐桌的链接
-    qr.make(fit=True)
-
-    img = qr.make_image(fill='black', back_color='white')
-
-    # 保存二维码到文件
-    file_name = os.path.join(qr_code_dir, f"table_{table_number}.png")
-    img.save(file_name)
-
-    return file_name
+# Initialize Stripe with test key
+stripe.api_key = settings.STRIPE_SECRET_KEY
 
 def create_table(request):
     if request.method == 'POST':
         table_number = request.POST.get('table_number')
-
-        # 检查餐桌编号是否已存在
-        if Table.objects.filter(table_number=table_number).exists():
-            return render(request, 'qrcode_app/create_table.html', {
-                'error': '该餐桌编号已存在，请使用其他编号。'
-            })
-
-        # 创建新的餐桌实例
-        table = Table(table_number=table_number)
-        table.save()
-
-        # 生成二维码并保存
-        qr_code_path = generate_qr_code(table_number)
-        with open(qr_code_path, 'rb') as qr_file:
-            table.qr_code.save(f"table_{table_number}.png", ContentFile(qr_file.read()))
-        table.save()
-
-        # 成功创建后重定向到创建餐桌页面，并传递餐桌编号
-        return render(request, 'qrcode_app/create_table.html', {
-            'table_number': table_number
-        })
+        if table_number:
+            # Check if table already exists
+            if Table.objects.filter(table_number=table_number).exists():
+                # You might want to add an error message here
+                return redirect('table_list')
+            
+            table = Table.objects.create(table_number=table_number)
+            
+            # Generate QR code
+            qr = qrcode.QRCode(version=1, box_size=10, border=5)
+            qr.add_data(request.build_absolute_uri(f'/table/menu/{table_number}/'))
+            qr.make(fit=True)
+            qr_image = qr.make_image(fill_color="black", back_color="white")
+            
+            # Save QR code
+            blob = ContentFile(b'')
+            qr_image.save(blob, 'PNG')
+            table.qr_code.save(f'table_{table_number}.png', blob)
+            
+            return redirect('view_qr_code', table_number=table_number)
     return render(request, 'qrcode_app/create_table.html')
 
 def view_qr_code(request, table_number):
-    # 根据餐桌编号获取餐桌对象
-    table = get_object_or_404(Table, table_number=table_number)
-    return render(request, 'qrcode_app/view_qr_code.html', {'table': table})
+    try:
+        table = Table.objects.get(table_number=table_number)
+        return render(request, 'qrcode_app/view_qr_code.html', {'table': table})
+    except Table.DoesNotExist:
+        return redirect('table_list')
 
 def table_list(request):
-    tables = Table.objects.all()  # 获取所有餐桌
+    tables = Table.objects.all()
     return render(request, 'qrcode_app/table_list.html', {'tables': tables})
 
-# qrcode_app/views.py
-
 def menu_view(request, table_number):
-    # 获取所有菜单项
-    menu_items = MenuItem.objects.all()
-    return render(request, 'qrcode_app/menu.html', {
-        'table_number': table_number,
-        'menu_items': menu_items
-    })
+    try:
+        table = Table.objects.get(table_number=table_number)
+        menu_items = MenuItem.objects.all()
+        context = {
+            'table_number': table_number,
+            'menu_items': menu_items,
+            'stripe_public_key': settings.STRIPE_PUBLIC_KEY
+        }
+        return render(request, 'qrcode_app/menu.html', context)
+    except Table.DoesNotExist:
+        return redirect('table_list')
 
+@csrf_exempt
+def create_payment_intent(request):
+    try:
+        data = json.loads(request.body)
+        table_number = data.get('table_number')
+        items = data.get('items', [])
+        
+        # Calculate total amount
+        amount = sum(float(item.get('price', 0)) for item in items)
+        
+        # Create order
+        table = Table.objects.get(table_number=table_number)
+        order = Order.objects.create(
+            table=table,
+            items=items,
+            total_amount=amount,
+            status='pending'
+        )
+        
+        # Create Stripe PaymentIntent
+        intent = stripe.PaymentIntent.create(
+            amount=int(amount * 100),  # Convert to cents
+            currency='usd',
+            metadata={
+                'order_id': order.id,
+                'table_number': table_number
+            }
+        )
+        
+        # Update order with payment intent ID
+        order.stripe_payment_intent = intent.id
+        order.save()
+        
+        return JsonResponse({
+            'clientSecret': intent.client_secret,
+            'order_id': order.id
+        })
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=400)
+
+@csrf_exempt
+def webhook(request):
+    payload = request.body
+    sig_header = request.META.get('HTTP_STRIPE_SIGNATURE')
+
+    try:
+        event = stripe.Webhook.construct_event(
+            payload, sig_header, settings.STRIPE_WEBHOOK_SECRET
+        )
+    except ValueError as e:
+        return JsonResponse({'error': str(e)}, status=400)
+    except stripe.error.SignatureVerificationError as e:
+        return JsonResponse({'error': str(e)}, status=400)
+
+    if event['type'] == 'payment_intent.succeeded':
+        payment_intent = event['data']['object']
+        order_id = payment_intent['metadata']['order_id']
+        
+        try:
+            order = Order.objects.get(id=order_id)
+            order.status = 'paid'
+            order.save()
+        except Order.DoesNotExist:
+            return JsonResponse({'error': 'Order not found'}, status=404)
+
+    return JsonResponse({'status': 'success'})
+
+@csrf_exempt
+def payment_status(request, order_id):
+    try:
+        order = Order.objects.get(id=order_id)
+        return JsonResponse({
+            'status': order.status,
+            'message': f'Order is {order.status}'
+        })
+    except Order.DoesNotExist:
+        return JsonResponse({'error': 'Order not found'}, status=404)
