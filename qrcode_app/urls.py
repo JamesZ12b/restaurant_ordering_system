@@ -13,5 +13,3 @@ urlpatterns = [
     path('floor-layout/', floor_layout, name='floor_layout'),
 ]
 
-if settings.DEBUG:
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

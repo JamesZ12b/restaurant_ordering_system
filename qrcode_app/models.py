@@ -1,8 +1,12 @@
 # qrcode_app/models.py
 
 from django.db import models
-from django.db.models.functions import Floor
 
+class Floor(models.Model):
+    name = models.CharField(max_length=50, unique=True)
+
+    def __str__(self):
+        return self.name
 
 class Table(models.Model):
     floor = models.ForeignKey(
@@ -35,9 +39,3 @@ class MenuItem(models.Model):
     image = models.ImageField(upload_to='menu_items/', blank=True, null=True)
     category = models.CharField(max_length=20, choices=CATEGORY_CHOICES, default='Main Course')  #
 
-class Floor(models.Model):
-    name = models.CharField(max_length=50)
-
-
-    def __str__(self):
-        return self.name

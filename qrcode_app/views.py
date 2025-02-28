@@ -80,12 +80,12 @@ def menu_view(request, table_number):
 
 def floor_layout(request):
     """
-    返回楼层和座位布局到前端页面。
+    返回楼层和桌位布局到前端页面。
+    如果你要渲染上一次发给你的 floor_layout.html，就在这里 render('floor_layout.html', {...})
     """
-    floors = Floor.objects.all()         # 如果需要显示楼层
-    tables = Table.objects.all()         # 拿到所有桌位
-    return render(request, 'floor_layout.html', {
+    floors = Floor.objects.all()
+    tables = Table.objects.select_related('floor').all()
+    return render(request, 'qrcode_app/floor_layout.html', {
         'floors': floors,
         'tables': tables
     })
-
