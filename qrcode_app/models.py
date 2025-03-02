@@ -2,8 +2,9 @@
 
 from django.db import models
 
+
 class Floor(models.Model):
-    name = models.CharField(max_length=50, unique=True)
+    name = models.CharField(max_length=50)
 
     def __str__(self):
         return self.name
@@ -13,13 +14,13 @@ class Table(models.Model):
         Floor,
         on_delete=models.CASCADE,
         related_name='tables',
-        null=True,  # 如果已有数据，先允许为空
+        null=True,        # 允许为空以兼容已有数据
         blank=True
     )
     table_number = models.CharField(max_length=10, unique=True)
     qr_code = models.ImageField(upload_to='qr_codes/', blank=True, null=True)
 
-    position_x = models.FloatField(default=0.0)  # 新增坐标字段
+    position_x = models.FloatField(default=0.0)
     position_y = models.FloatField(default=0.0)
 
     def __str__(self):

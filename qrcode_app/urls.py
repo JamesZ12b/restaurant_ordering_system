@@ -10,6 +10,5 @@ urlpatterns = [
     path('create/', create_table, name='create_table'),  # 创建餐桌
     path('qr_code/<str:table_number>/', view_qr_code, name='qr_code_view'),
     path('menu/<str:table_number>/', menu_view, name='menu_view'),# 餐桌二维码视图
-    path('floor-layout/', floor_layout, name='floor_layout'),
 ]
 

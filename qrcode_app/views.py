@@ -1,17 +1,9 @@
 # qrcode_app/views.py
 
 import os
-import qrcode
-from django.shortcuts import render, redirect
-from django.core.files.base import ContentFile
-from .models import Table, MenuItem,Floor
-
-# qrcode_app/views.py
-
-import os
 from django.core.files.base import ContentFile
 from django.shortcuts import render, redirect, get_object_or_404
-from .models import Table
+from .models import Table, MenuItem,Floor
 import qrcode
 
 def generate_qr_code(table_number):
@@ -88,4 +80,38 @@ def floor_layout(request):
     return render(request, 'qrcode_app/floor_layout.html', {
         'floors': floors,
         'tables': tables
+    })
+
+def combined_view(request):
+    floors = Floor.objects.all()
+    tables = Table.objects.all()
+    return render(request, 'qrcode_app/combined_page.html', {
+        'floors': floors,
+        'tables': tables,
+    })
+
+
+def table_list_view(request):
+    all_tables = Table.objects.all().order_by('table_number')
+
+    # 获取所有楼层
+    floors = Floor.objects.all().order_by('id')
+
+    # 构造前端可用的结构，如 floorData = { 楼层ID: [ {id, seats, ...}, ...], ...}
+    floor_data = {}
+    for floor in floors:
+        # 查找该楼层下所有桌子
+        tables = floor.tables.all().order_by('table_number')
+        floor_data[floor.id] = [
+            {
+                "id": str(t.table_number),  # 改为字符串，方便前端识别
+                "seats": t.seating_capacity if hasattr(t, 'seating_capacity') else 4,
+                "status": "available"  # 初始值，你可根据数据库中的某个状态字段来决定
+            }
+            for t in tables
+        ]
+
+    return render(request, 'table_list.html', {
+        "floor_data_json": floor_data,
+        'tables': all_tables,  # 如果需要在模板中使用所有桌子
     })
