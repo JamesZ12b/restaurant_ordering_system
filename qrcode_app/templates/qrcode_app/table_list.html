@@ -2,92 +2,57 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Restaurant Tables</title>
+  <title>Table organiser</title>
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
-  <style>
-    /* 自定义样式 - 确保在所有设备上内容居中 */
-    .table-card {
-      display: flex;
-      flex-direction: column;
-      width: 100%;
-    }
-
-    .table-number {
-      align-self: center;
-      text-align: center;
-      width: 100%;
-      margin-bottom: 0.5rem;
-    }
-
-    .qr-button {
-      width: 100%;
-      max-width: 250px;
-      margin: 0 auto;
-      display: block;
-    }
-
-    @media (min-width: 768px) {
-      /* 在更大屏幕上保持原有的左对齐 */
-      .table-card {
-        align-items: flex-start;
-      }
-
-      .table-number {
-        align-self: flex-start;
-        text-align: left;
-      }
-    }
-  </style>
 </head>
 <body class="bg-gray-100 text-gray-800">
   <div class="container mx-auto p-4">
-    <h1 class="text-2xl font-bold mb-4">Restaurant Tables</h1>
+    <h1 class="text-2xl font-bold mb-4">Table organiser
+</h1>
 
-    <!-- 导航栏：创建按钮和楼层切换 -->
-    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-6">
-      <!-- "Create New Table" 按钮 -->
-      <a
-        href="{% url 'create_table' %}"
-        class="inline-block bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors"
+    <!-- "Create New Table" 按钮 -->
+    <a
+      href="{% url 'create_table' %}"
+      class="inline-block bg-blue-600 text-white px-4 py-2 rounded mb-4 hover:bg-blue-700 transition-colors"
+    >
+      + Create New Table
+    </a>
+
+    <!-- 楼层切换按钮 -->
+    <div class="flex gap-2 mb-4">
+      <button
+        class="px-4 py-1 bg-gray-800 text-white rounded"
+        onclick="switchFloor('1')"
       >
-        + Create New Table
-      </a>
-
-      <!-- 楼层切换按钮 -->
-      <div class="flex gap-2">
-        <button
-          class="px-4 py-1 bg-gray-800 text-white rounded"
-          onclick="switchFloor('1')"
-        >
-          1st Floor
-        </button>
-        <button
-          class="px-4 py-1 bg-gray-200 text-black rounded"
-          onclick="switchFloor('2')"
-        >
-          2nd Floor
-        </button>
-      </div>
+        1st Floor
+      </button>
+      <button
+        class="px-4 py-1 bg-gray-200 text-black rounded"
+        onclick="switchFloor('2')"
+      >
+        2nd Floor
+      </button>
     </div>
 
     <!-- 一楼 -->
     <div id="floor-1" class="block">
       <h2 class="text-lg font-semibold mb-2">First Floor</h2>
       {% if tables %}
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
           {% for table in tables|slice:"0:9" %}
-            <div class="bg-white rounded shadow p-4 table-card">
-              <h2 class="text-lg font-semibold table-number">
+            <div class="bg-white rounded shadow p-4 flex flex-col items-start">
+              <h2 class="text-lg font-semibold mb-2">
                 F1-T{{ table.table_number }}
               </h2>
-              <a
-                href="{% url 'qr_code_view' table.table_number %}"
-                class="bg-green-600 text-white px-3 py-2 rounded hover:bg-green-700 transition-colors text-center qr-button"
-              >
-                View QR Code
-              </a>
+              <div class="button-group flex space-x-2">
+                <a
+                  href="{% url 'qr_code_view' table.table_number %}"
+                  class="bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700 transition-colors"
+                >
+                  View QR Code
+                </a>
+              </div>
             </div>
           {% endfor %}
         </div>
@@ -105,18 +70,20 @@
     <div id="floor-2" class="hidden">
       <h2 class="text-lg font-semibold mb-2">Second Floor (starting from table #11)</h2>
       {% if tables|length > 9 %}
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
           {% for table in tables|slice:"9:" %}
-            <div class="bg-white rounded shadow p-4 table-card">
-              <h2 class="text-lg font-semibold table-number">
+            <div class="bg-white rounded shadow p-4 flex flex-col items-start">
+              <h2 class="text-lg font-semibold mb-2">
                 F2-T{{ table.table_number }}
               </h2>
-              <a
-                href="{% url 'qr_code_view' table.table_number %}"
-                class="bg-green-600 text-white px-3 py-2 rounded hover:bg-green-700 transition-colors text-center qr-button"
-              >
-                View QR Code
-              </a>
+              <div class="button-group flex space-x-2">
+                <a
+                  href="{% url 'qr_code_view' table.table_number %}"
+                  class="bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700 transition-colors"
+                >
+                  View QR Code
+                </a>
+              </div>
             </div>
           {% endfor %}
         </div>
@@ -158,9 +125,7 @@
     }
 
     // 页面加载默认显示一楼
-    document.addEventListener('DOMContentLoaded', function() {
-      switchFloor('1');
-    });
+    switchFloor('1');
   </script>
 </body>
 </html>

@@ -1,370 +1,174 @@
 {% load static %}
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Restaurant Ordering System - Responsive</title>
+    <script src="https://js.stripe.com/v3/"></script>
     <style>
         /* Base styles */
-        :root {
-            --primary-color: #27ae60;
-            --secondary-color: #f39c12;
-            --background-color: #f8f8f8;
-            --text-color: #333;
-            --light-text: #666;
-            --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            --border-radius: 8px;
-        }
-
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
-
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: var(--background-color);
+            background-color: #f8f8f8;
             margin: 0;
             padding: 0;
-            line-height: 1.6;
-            color: var(--text-color);
+            color: #333;
         }
 
-        /* Header Styles */
         .header {
-            background: var(--primary-color);
+            background: #27ae60;
             color: white;
             text-align: center;
             padding: 1rem;
             font-size: 1.5rem;
-            box-shadow: var(--shadow);
-            position: sticky;
-            top: 0;
-            z-index: 100;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
 
         #table-info {
             text-align: center;
             font-size: 1.2rem;
-            color: var(--text-color);
+            color: #333;
             margin: 1rem 0;
-            padding: 0.5rem;
-            background-color: white;
-            border-radius: var(--border-radius);
-            box-shadow: var(--shadow);
-            width: 90%;
-            max-width: 400px;
-            margin: 1rem auto;
         }
 
-        /* Navigation Tabs for Categories */
-        .category-nav {
-            display: flex;
-            justify-content: center;
-            flex-wrap: nowrap;
-            overflow-x: auto;
-            gap: 0.5rem;
-            padding: 0.5rem;
-            background: white;
-            margin: 0 auto 1rem;
-            position: sticky;
-            top: 3.5rem;
-            z-index: 90;
-            box-shadow: var(--shadow);
-        }
-
-        .category-tab {
-            padding: 0.5rem 1rem;
-            background: #f1f1f1;
-            border-radius: var(--border-radius);
-            cursor: pointer;
-            white-space: nowrap;
-            font-weight: bold;
-            color: var(--text-color);
-            transition: all 0.2s;
-        }
-
-        .category-tab.active {
-            background: var(--primary-color);
-            color: white;
-        }
-
-        /* Menu Category Container */
+        /* Menu styles */
         .menu-category {
             width: 90%;
             max-width: 1200px;
-            margin: 0 auto 2rem;
-            scroll-margin-top: 7rem;
+            margin: 2rem auto;
         }
 
         .category-title {
             font-size: 1.4rem;
-            font-weight: bold;
+            font-weight: 600;
             margin-bottom: 1rem;
-            color: var(--text-color);
+            color: #333;
             padding-left: 0.8rem;
-            border-left: 5px solid var(--primary-color);
-            display: flex;
-            align-items: center;
+            border-left: 4px solid #27ae60;
         }
 
-        .category-title .emoji {
-            margin-right: 0.5rem;
-            font-size: 1.6rem;
-        }
-
-        /* Menu Item Grid */
         .menu-container {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
             gap: 1.5rem;
+            margin-bottom: 2rem;
         }
 
         .menu-item {
             background: white;
-            border-radius: var(--border-radius);
+            border-radius: 12px;
             overflow: hidden;
-            box-shadow: var(--shadow);
-            transition: transform 0.3s ease;
-            height: 100%;
-            display: flex;
-            flex-direction: column;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: transform 0.2s, box-shadow 0.2s;
         }
 
         .menu-item:hover {
             transform: translateY(-5px);
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
-        }
-
-        .menu-item-image-container {
-            position: relative;
-            height: 180px;
-            overflow: hidden;
+            box-shadow: 0 6px 12px rgba(0,0,0,0.15);
         }
 
         .menu-item-image {
             width: 100%;
-            height: 100%;
+            height: 200px;
             object-fit: cover;
-            transition: transform 0.5s ease;
-        }
-
-        .menu-item:hover .menu-item-image {
-            transform: scale(1.05);
+            border-bottom: 1px solid #eee;
         }
 
         .menu-content {
             padding: 1rem;
-            display: flex;
-            flex-direction: column;
-            flex-grow: 1;
         }
 
         .menu-content h3 {
-            margin-bottom: 0.5rem;
-            font-size: 1.1rem;
+            margin: 0 0 0.5rem 0;
+            font-size: 1.2rem;
+            color: #2c3e50;
         }
 
         .menu-content p {
             font-size: 0.9rem;
-            color: var(--light-text);
-            margin-bottom: 0.8rem;
-            flex-grow: 1;
+            color: #666;
+            margin-bottom: 1rem;
         }
 
         .menu-content .price {
             font-size: 1.2rem;
-            font-weight: bold;
-            color: var(--primary-color);
-            margin: 0.5rem 0;
+            font-weight: 600;
+            color: #27ae60;
         }
 
-        .quantity-control {
-            display: flex;
-            align-items: center;
-            margin: 0.5rem 0;
-        }
-
-        .quantity-btn {
-            background: #f1f1f1;
-            color: var(--text-color);
-            width: 30px;
-            height: 30px;
-            display: grid;
-            place-items: center;
-            border-radius: 50%;
-            cursor: pointer;
-            font-weight: bold;
-            user-select: none;
-            transition: all 0.2s;
-        }
-
-        .quantity-btn:hover {
-            background: var(--primary-color);
+        /* Cart styles */
+        .cart {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            background: #f39c12;
             color: white;
+            padding: 1rem 1.5rem;
+            border-radius: 50px;
+            cursor: pointer;
+            font-size: 1.1rem;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: transform 0.2s;
+            z-index: 100;
         }
 
-        .quantity-display {
-            margin: 0 0.8rem;
-            width: 30px;
-            text-align: center;
-            font-weight: bold;
+        .cart:hover {
+            transform: scale(1.05);
         }
 
+        .cart-container {
+            display: none;
+            position: fixed;
+            bottom: 5rem;
+            right: 2rem;
+            background: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            width: 320px;
+            max-height: 80vh;
+            overflow-y: auto;
+            z-index: 99;
+        }
+
+        #cart-list {
+            list-style: none;
+            padding: 0;
+            margin: 0 0 1rem 0;
+        }
+
+        #cart-list li {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .cart-total {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin: 1rem 0;
+            color: #2c3e50;
+        }
+
+        /* Button styles */
         .btn {
-            background: var(--primary-color);
+            background: #27ae60;
             color: white;
             border: none;
-            padding: 0.7rem;
+            padding: 0.8rem 1.2rem;
+            border-radius: 6px;
             cursor: pointer;
-            border-radius: var(--border-radius);
-            font-weight: bold;
-            transition: all 0.2s;
+            font-size: 1rem;
+            transition: background 0.2s;
             width: 100%;
-            margin-top: auto;
+            margin: 0.5rem 0;
         }
 
         .btn:hover {
             background: #219150;
-            transform: translateY(-2px);
-        }
-
-        .btn:active {
-            transform: translateY(0);
-        }
-
-        /* Cart Button (Floating) */
-        .cart {
-            position: fixed;
-            bottom: 1.5rem;
-            right: 1.5rem;
-            background: var(--secondary-color);
-            color: white;
-            padding: 0.8rem 1.2rem;
-            border-radius: var(--border-radius);
-            cursor: pointer;
-            font-size: 1.1rem;
-            box-shadow: var(--shadow);
-            z-index: 1000;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            transition: all 0.3s;
-        }
-
-        .cart:hover {
-            background: #e67e22;
-            transform: translateY(-3px);
-        }
-
-        .cart-badge {
-            position: absolute;
-            top: -10px;
-            right: -10px;
-            background: red;
-            color: white;
-            width: 25px;
-            height: 25px;
-            display: grid;
-            place-items: center;
-            border-radius: 50%;
-            font-size: 0.9rem;
-            font-weight: bold;
-        }
-
-        /* Cart Container */
-        .cart-container {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.7);
-            z-index: 1001;
-            justify-content: center;
-            align-items: center;
-        }
-
-        .cart-content {
-            background: white;
-            width: 90%;
-            max-width: 500px;
-            max-height: 80vh;
-            overflow-y: auto;
-            border-radius: var(--border-radius);
-            padding: 1.5rem;
-            position: relative;
-        }
-
-        .cart-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 1rem;
-            padding-bottom: 0.5rem;
-            border-bottom: 1px solid #eee;
-        }
-
-        .close-cart {
-            background: none;
-            border: none;
-            font-size: 1.5rem;
-            cursor: pointer;
-            color: var(--text-color);
-        }
-
-        #cart-list {
-            list-style-type: none;
-            margin: 1rem 0;
-        }
-
-        .cart-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 0.8rem 0;
-            border-bottom: 1px solid #eee;
-        }
-
-        .cart-item-info {
-            flex-grow: 1;
-        }
-
-        .cart-item-name {
-            font-weight: bold;
-        }
-
-        .cart-item-price {
-            color: var(--primary-color);
-        }
-
-        .cart-item-quantity {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .cart-total {
-            display: flex;
-            justify-content: space-between;
-            font-size: 1.2rem;
-            font-weight: bold;
-            margin: 1rem 0;
-            padding-top: 0.5rem;
-            border-top: 2px solid #eee;
-        }
-
-        .cart-buttons {
-            display: flex;
-            gap: 1rem;
-        }
-
-        .cart-buttons .btn {
-            flex: 1;
         }
 
         .btn-secondary {
@@ -375,157 +179,122 @@
             background: #c0392b;
         }
 
-        .empty-cart-message {
-            text-align: center;
-            padding: 2rem;
-            color: var(--light-text);
-        }
-
-        /* Toast Notifications */
-        .toast-container {
+        /* Payment Modal */
+        .modal {
+            display: none;
             position: fixed;
-            top: 5rem;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-content {
+            position: relative;
+            background: white;
+            margin: 5% auto;
+            padding: 2rem;
+            width: 90%;
+            max-width: 500px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+
+        .close-modal {
+            position: absolute;
             right: 1rem;
-            z-index: 1100;
+            top: 1rem;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #666;
         }
 
-        .toast {
-            background: var(--primary-color);
-            color: white;
-            padding: 0.8rem 1.5rem;
-            border-radius: var(--border-radius);
+        /* Payment Form */
+        #payment-form {
+            margin-top: 1rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-label {
+            display: block;
             margin-bottom: 0.5rem;
-            box-shadow: var(--shadow);
-            animation: slideIn 0.3s, fadeOut 0.5s 2.5s forwards;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
+            color: #2c3e50;
+            font-weight: 500;
         }
 
-        @keyframes slideIn {
-            from { transform: translateX(100%); }
-            to { transform: translateX(0); }
+        #card-element {
+            padding: 1rem;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            background: #f8f9fa;
         }
 
-        @keyframes fadeOut {
-            from { opacity: 1; }
-            to { opacity: 0; }
+        #card-errors {
+            color: #e74c3c;
+            font-size: 0.9rem;
+            margin-top: 0.5rem;
         }
 
-        /* Responsive Styles */
-        @media (max-width: 1024px) {
-            .menu-container {
-                grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-            }
+        .payment-status {
+            text-align: center;
+            padding: 1rem;
+            margin: 1rem 0;
+            border-radius: 6px;
         }
 
-        @media (max-width: 767px) {
-            .header {
-                font-size: 1.2rem;
-                padding: 0.8rem;
-            }
+        .payment-status.success {
+            background: #d4edda;
+            color: #155724;
+        }
 
-            #table-info {
-                font-size: 1rem;
-                margin: 0.8rem auto;
-            }
+        .payment-status.error {
+            background: #f8d7da;
+            color: #721c24;
+        }
 
-            .category-nav {
-                padding: 0.5rem;
-                top: 2.8rem;
-            }
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 1rem;
+        }
 
-            .category-tab {
-                padding: 0.4rem 0.8rem;
-                font-size: 0.9rem;
-            }
+        .loading::after {
+            content: '';
+            display: inline-block;
+            width: 1.5rem;
+            height: 1.5rem;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #27ae60;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
 
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
             .menu-category {
                 width: 95%;
-                scroll-margin-top: 6rem;
             }
 
-            .category-title {
-                font-size: 1.2rem;
+            .cart-container {
+                width: 90%;
+                right: 5%;
+                bottom: 80px;
             }
 
-            .menu-container {
-                grid-template-columns: 1fr;
-                gap: 1rem;
-            }
-
-            .menu-item-image-container {
-                height: 160px;
-            }
-
-            .menu-content h3 {
-                font-size: 1rem;
-            }
-
-            .cart {
-                padding: 0.6rem 1rem;
-                font-size: 1rem;
-            }
-
-            .cart-content {
+            .modal-content {
                 width: 95%;
-                padding: 1rem;
-            }
-        }
-
-        @media (max-width: 480px) {
-            .menu-item-image-container {
-                height: 140px;
-            }
-
-            .cart-buttons {
-                flex-direction: column;
-                gap: 0.5rem;
-            }
-        }
-
-        /* Accessibility Improvements */
-        .btn:focus, .quantity-btn:focus, .category-tab:focus {
-            outline: 2px solid blue;
-            outline-offset: 2px;
-        }
-
-        /* Dark mode support */
-        @media (prefers-color-scheme: dark) {
-            :root {
-                --background-color: #121212;
-                --text-color: #f1f1f1;
-                --light-text: #aaaaaa;
-            }
-
-            .menu-item, #table-info, .category-tab {
-                background: #222;
-                color: var(--text-color);
-            }
-
-            .category-tab {
-                background: #333;
-            }
-
-            .cart-content {
-                background: #222;
-            }
-
-            .cart-item {
-                border-bottom: 1px solid #444;
-            }
-
-            .cart-header {
-                border-bottom: 1px solid #444;
-            }
-
-            .cart-total {
-                border-top: 2px solid #444;
-            }
-
-            .quantity-btn {
-                background: #333;
-                color: var(--text-color);
+                margin: 10% auto;
             }
         }
     </style>
@@ -534,382 +303,234 @@
     <div class="header">Online Restaurant Ordering System</div>
     <h2 id="table-info">You are ordering from table {{ table_number }}</h2>
 
-    <!-- Category Navigation Tabs -->
-    <div class="category-nav">
-        <div class="category-tab active" onclick="scrollToCategory('main-courses')">🍽 Main Courses</div>
-        <div class="category-tab" onclick="scrollToCategory('snacks')">🍟 Snacks</div>
-        <div class="category-tab" onclick="scrollToCategory('drinks')">🥤 Drinks</div>
-        <div class="category-tab" onclick="scrollToCategory('desserts')">🍰 Desserts</div>
-    </div>
-
-    <!-- Toast Notifications Container -->
-    <div class="toast-container" id="toast-container"></div>
-
-    <!-- 🍽 Main Courses -->
-    <div class="menu-category" id="main-courses">
-        <div class="category-title"><span class="emoji">🍽</span> Main Courses</div>
+    <!-- Menu Categories -->
+    {% regroup menu_items by category as category_list %}
+    {% for category in category_list %}
+    <div class="menu-category">
+        <div class="category-title">
+            {% if category.grouper == 'Main Course' %}🍽
+            {% elif category.grouper == 'Snack' %}🍟
+            {% elif category.grouper == 'Drink' %}🥤
+            {% elif category.grouper == 'Dessert' %}🍰
+            {% endif %}
+            {{ category.grouper }}
+        </div>
         <div class="menu-container">
-            {% for item in menu_items %}
-                {% if item.category == "Main Course" %}
-                <div class="menu-item">
-                    <div class="menu-item-image-container">
-                        <img src="{{ item.image.url }}" alt="{{ item.name }}" class="menu-item-image">
-                    </div>
-                    <div class="menu-content">
-                        <h3>{{ item.name }}</h3>
-                        <p>{{ item.description }}</p>
-                        <div class="price">$ {{ item.price }}</div>
-                        <div class="quantity-control">
-                            <div class="quantity-btn" onclick="decrementQuantity(this)">-</div>
-                            <div class="quantity-display">1</div>
-                            <div class="quantity-btn" onclick="incrementQuantity(this)">+</div>
-                        </div>
-                        <button class="btn" onclick="addToCart('{{ item.name }}', {{ item.price }}, this)">Add to Cart</button>
-                    </div>
+            {% for item in category.list %}
+            <div class="menu-item">
+                <img src="{{ item.image.url }}" alt="{{ item.name }}" class="menu-item-image">
+                <div class="menu-content">
+                    <h3>{{ item.name }}</h3>
+                    <p>{{ item.description }}</p>
+                    <div class="price">${{ item.price }}</div>
+                    <button class="btn" onclick="addToCart('{{ item.name }}', {{ item.price }})">Add to Cart</button>
                 </div>
-                {% endif %}
+            </div>
             {% endfor %}
         </div>
     </div>
+    {% endfor %}
 
-    <!-- 🍟 Snacks -->
-    <div class="menu-category" id="snacks">
-        <div class="category-title"><span class="emoji">🍟</span> Snacks</div>
-        <div class="menu-container">
-            {% for item in menu_items %}
-                {% if item.category == "Snack" %}
-                <div class="menu-item">
-                    <div class="menu-item-image-container">
-                        <img src="{{ item.image.url }}" alt="{{ item.name }}" class="menu-item-image">
-                    </div>
-                    <div class="menu-content">
-                        <h3>{{ item.name }}</h3>
-                        <p>{{ item.description }}</p>
-                        <div class="price">$ {{ item.price }}</div>
-                        <div class="quantity-control">
-                            <div class="quantity-btn" onclick="decrementQuantity(this)">-</div>
-                            <div class="quantity-display">1</div>
-                            <div class="quantity-btn" onclick="incrementQuantity(this)">+</div>
-                        </div>
-                        <button class="btn" onclick="addToCart('{{ item.name }}', {{ item.price }}, this)">Add to Cart</button>
-                    </div>
+    <!-- Cart Button and Container -->
+    <div class="cart" onclick="toggleCart()">🛒 View Cart</div>
+    <div class="cart-container" id="cart-container">
+        <h3>Your Order</h3>
+        <ul id="cart-list"></ul>
+        <div class="cart-total">Total: $<span id="total-price">0.00</span></div>
+        <button class="btn" onclick="showPaymentModal()">Proceed to Payment</button>
+        <button class="btn btn-secondary" onclick="clearCart()">Clear Cart</button>
+    </div>
+
+    <!-- Payment Modal -->
+    <div id="payment-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal" onclick="closePaymentModal()">&times;</span>
+            <h2>Payment Details</h2>
+            <div class="payment-status" id="payment-status" style="display: none;"></div>
+            <div class="loading" id="payment-loading"></div>
+            <form id="payment-form">
+                <div class="form-group">
+                    <label class="form-label">Card Information</label>
+                    <div id="card-element"></div>
+                    <div id="card-errors" role="alert"></div>
                 </div>
-                {% endif %}
-            {% endfor %}
-        </div>
-    </div>
-
-    <!-- 🥤 Drinks -->
-    <div class="menu-category" id="drinks">
-        <div class="category-title"><span class="emoji">🥤</span> Drinks</div>
-        <div class="menu-container">
-            {% for item in menu_items %}
-                {% if item.category == "Drink" %}
-                <div class="menu-item">
-                    <div class="menu-item-image-container">
-                        <img src="{{ item.image.url }}" alt="{{ item.name }}" class="menu-item-image">
-                    </div>
-                    <div class="menu-content">
-                        <h3>{{ item.name }}</h3>
-                        <p>{{ item.description }}</p>
-                        <div class="price">$ {{ item.price }}</div>
-                        <div class="quantity-control">
-                            <div class="quantity-btn" onclick="decrementQuantity(this)">-</div>
-                            <div class="quantity-display">1</div>
-                            <div class="quantity-btn" onclick="incrementQuantity(this)">+</div>
-                        </div>
-                        <button class="btn" onclick="addToCart('{{ item.name }}', {{ item.price }}, this)">Add to Cart</button>
-                    </div>
-                </div>
-                {% endif %}
-            {% endfor %}
-        </div>
-    </div>
-
-    <!-- 🍰 Desserts -->
-    <div class="menu-category" id="desserts">
-        <div class="category-title"><span class="emoji">🍰</span> Desserts</div>
-        <div class="menu-container">
-            {% for item in menu_items %}
-                {% if item.category == "Dessert" %}
-                <div class="menu-item">
-                    <div class="menu-item-image-container">
-                        <img src="{{ item.image.url }}" alt="{{ item.name }}" class="menu-item-image">
-                    </div>
-                    <div class="menu-content">
-                        <h3>{{ item.name }}</h3>
-                        <p>{{ item.description }}</p>
-                        <div class="price">$ {{ item.price }}</div>
-                        <div class="quantity-control">
-                            <div class="quantity-btn" onclick="decrementQuantity(this)">-</div>
-                            <div class="quantity-display">1</div>
-                            <div class="quantity-btn" onclick="incrementQuantity(this)">+</div>
-                        </div>
-                        <button class="btn" onclick="addToCart('{{ item.name }}', {{ item.price }}, this)">Add to Cart</button>
-                    </div>
-                </div>
-                {% endif %}
-            {% endfor %}
-        </div>
-    </div>
-
-    <!-- 🛒 Shopping Cart Button -->
-    <div class="cart" onclick="toggleCart()">
-        <span>🛒 View Cart</span>
-        <span class="cart-badge" id="cart-badge">0</span>
-    </div>
-
-    <!-- Cart Modal -->
-    <div class="cart-container" id="cart-container" onclick="closeCartOnOutsideClick(event)">
-        <div class="cart-content">
-            <div class="cart-header">
-                <h3>Your Order</h3>
-                <button class="close-cart" onclick="toggleCart()">×</button>
-            </div>
-            <div id="cart-items-container">
-                <ul id="cart-list"></ul>
-                <div id="empty-cart-message" class="empty-cart-message">Your cart is empty</div>
-            </div>
-            <div class="cart-total">
-                <span>Total:</span>
-                <span>$<span id="total-price">0.00</span></span>
-            </div>
-            <div class="cart-buttons">
-                <button class="btn btn-secondary" onclick="clearCart()">Clear Cart</button>
-                <button class="btn" onclick="checkout()">Checkout</button>
-            </div>
+                <button class="btn" type="submit">Pay Now</button>
+            </form>
         </div>
     </div>
 
     <script>
+        // Initialize variables
         let cart = [];
         let totalPrice = 0;
-        let totalItems = 0;
+        const stripe = Stripe('{{ stripe_public_key }}');
+        const elements = stripe.elements();
+        const card = elements.create('card');
+        let paymentIntentId = null;
 
-        // Initialize active category tab
-        document.addEventListener('DOMContentLoaded', function() {
-            // Set first tab as active by default
-            const tabs = document.querySelectorAll('.category-tab');
-            tabs.forEach((tab, index) => {
-                tab.classList.toggle('active', index === 0);
+        // Mount card element
+        card.mount('#card-element');
 
-                // Add keyboard accessibility
-                tab.setAttribute('tabindex', '0');
-                tab.setAttribute('role', 'button');
-                tab.addEventListener('keydown', (e) => {
-                    if (e.key === 'Enter' || e.key === ' ') {
-                        e.preventDefault();
-                        tab.click();
-                    }
-                });
-            });
-
-            // Add accessibility to buttons
-            const allButtons = document.querySelectorAll('.btn, .quantity-btn');
-            allButtons.forEach(button => {
-                if (!button.getAttribute('tabindex')) {
-                    button.setAttribute('tabindex', '0');
-                }
-            });
+        // Handle card element errors
+        card.on('change', function(event) {
+            const displayError = document.getElementById('card-errors');
+            if (event.error) {
+                displayError.textContent = event.error.message;
+            } else {
+                displayError.textContent = '';
+            }
         });
 
-        // Scroll to category function
-        function scrollToCategory(categoryId) {
-            const element = document.getElementById(categoryId);
-            const tabs = document.querySelectorAll('.category-tab');
-
-            // Update active tab
-            tabs.forEach((tab, index) => {
-                tab.classList.toggle('active', tab.textContent.toLowerCase().includes(categoryId.replace('-', ' ')));
-            });
-
-            // Smooth scroll to the category
-            element.scrollIntoView({ behavior: 'smooth' });
-        }
-
-        // Quantity control functions
-        function incrementQuantity(element) {
-            const quantityDisplay = element.parentElement.querySelector('.quantity-display');
-            let quantity = parseInt(quantityDisplay.textContent);
-            quantityDisplay.textContent = quantity + 1;
-        }
-
-        function decrementQuantity(element) {
-            const quantityDisplay = element.parentElement.querySelector('.quantity-display');
-            let quantity = parseInt(quantityDisplay.textContent);
-            if (quantity > 1) {
-                quantityDisplay.textContent = quantity - 1;
-            }
-        }
-
-        // Add to cart function
-        function addToCart(itemName, itemPrice, buttonElement) {
-            // Get quantity
-            const quantityDisplay = buttonElement.parentElement.querySelector('.quantity-display');
-            const quantity = parseInt(quantityDisplay.textContent);
-
-            // Check if item already exists in cart
-            const existingItemIndex = cart.findIndex(item => item.name === itemName);
-
-            if (existingItemIndex !== -1) {
-                // Update existing item quantity
-                cart[existingItemIndex].quantity += quantity;
-            } else {
-                // Add new item to cart
-                cart.push({
-                    name: itemName,
-                    price: itemPrice,
-                    quantity: quantity
-                });
-            }
-
-            // Reset quantity display
-            quantityDisplay.textContent = '1';
-
-            // Update totals
-            calculateTotals();
+        // Cart functions
+        function addToCart(itemName, itemPrice) {
+            cart.push({ name: itemName, price: itemPrice });
+            totalPrice += itemPrice;
             updateCart();
-
-            // Show toast notification
-            showToast(`Added ${quantity} ${itemName} to cart`);
-        }
-
-        function calculateTotals() {
-            totalPrice = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-            totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
-
-            // Update badge
-            document.getElementById('cart-badge').textContent = totalItems;
-
-            // Show/hide badge
-            document.getElementById('cart-badge').style.display = totalItems > 0 ? 'grid' : 'none';
+            showNotification(`Added ${itemName} to cart`);
         }
 
         function updateCart() {
             const cartList = document.getElementById('cart-list');
-            const emptyCartMessage = document.getElementById('empty-cart-message');
-
-            // Clear current list
             cartList.innerHTML = '';
-
-            // Show empty message if cart is empty
-            emptyCartMessage.style.display = cart.length === 0 ? 'block' : 'none';
-
-            // Add items to cart
             cart.forEach((item, index) => {
                 const li = document.createElement('li');
-                li.className = 'cart-item';
                 li.innerHTML = `
-                    <div class="cart-item-info">
-                        <div class="cart-item-name">${item.name}</div>
-                        <div class="cart-item-price">$${(item.price * item.quantity).toFixed(2)}</div>
-                    </div>
-                    <div class="cart-item-quantity">
-                        <div class="quantity-btn" onclick="updateCartItemQuantity(${index}, -1)">-</div>
-                        <div class="quantity-display">${item.quantity}</div>
-                        <div class="quantity-btn" onclick="updateCartItemQuantity(${index}, 1)">+</div>
-                        <div class="quantity-btn" onclick="removeCartItem(${index})" style="margin-left: 5px;">🗑️</div>
-                    </div>
+                    ${item.name} - $${item.price.toFixed(2)}
+                    <button class="btn-remove" onclick="removeFromCart(${index})">×</button>
                 `;
                 cartList.appendChild(li);
             });
-
-            // Update total price
             document.getElementById('total-price').textContent = totalPrice.toFixed(2);
         }
 
-        function updateCartItemQuantity(index, change) {
-            cart[index].quantity += change;
-
-            // Remove item if quantity reaches 0
-            if (cart[index].quantity <= 0) {
-                removeCartItem(index);
-                return;
-            }
-
-            calculateTotals();
-            updateCart();
-        }
-
-        function removeCartItem(index) {
+        function removeFromCart(index) {
+            totalPrice -= cart[index].price;
             cart.splice(index, 1);
-            calculateTotals();
             updateCart();
-            showToast('Item removed from cart');
         }
 
         function clearCart() {
             cart = [];
-            calculateTotals();
+            totalPrice = 0;
             updateCart();
-            showToast('Cart cleared');
+            toggleCart();
         }
 
         function toggleCart() {
             const cartContainer = document.getElementById('cart-container');
-            cartContainer.style.display = cartContainer.style.display === 'none' || cartContainer.style.display === '' ? 'flex' : 'none';
-
-            // Update cart contents when opening
-            if (cartContainer.style.display === 'flex') {
-                updateCart();
-            }
+            cartContainer.style.display = cartContainer.style.display === 'none' ? 'block' : 'none';
         }
 
-        function closeCartOnOutsideClick(event) {
-            const cartContent = document.querySelector('.cart-content');
-            if (event.target === document.getElementById('cart-container')) {
-                toggleCart();
-            }
-        }
-
-        function checkout() {
+        // Payment Modal functions
+        function showPaymentModal() {
             if (cart.length === 0) {
-                showToast('Your cart is empty', 'error');
+                showNotification('Please add items to your cart first');
                 return;
             }
-
-            // Here you would typically submit the order to server
-            alert('Your order has been placed for table {{ table_number }}!');
-
-            // Clear cart after checkout
-            clearCart();
-            toggleCart();
+            document.getElementById('payment-modal').style.display = 'block';
+            createPaymentIntent();
         }
 
-        // Toast notification function
-        function showToast(message, type = 'success') {
-            const toastContainer = document.getElementById('toast-container');
-            const toast = document.createElement('div');
-            toast.className = 'toast';
-            toast.textContent = message;
-
-            // Add color based on type
-            if (type === 'error') {
-                toast.style.backgroundColor = '#e74c3c';
-            }
-
-            toastContainer.appendChild(toast);
-
-            // Remove toast after animation completes
-            setTimeout(() => {
-                toast.remove();
-            }, 3000);
+        function closePaymentModal() {
+            document.getElementById('payment-modal').style.display = 'none';
+            document.getElementById('payment-status').style.display = 'none';
+            document.getElementById('payment-form').style.display = 'block';
         }
 
-        // Add keyboard accessibility for the cart button
-        document.addEventListener('DOMContentLoaded', function() {
-            const cartButton = document.querySelector('.cart');
-            cartButton.setAttribute('tabindex', '0');
-            cartButton.setAttribute('role', 'button');
-            cartButton.setAttribute('aria-label', 'View shopping cart');
-
-            cartButton.addEventListener('keydown', function(e) {
-                if (e.key === 'Enter' || e.key === ' ') {
-                    e.preventDefault();
-                    toggleCart();
+        // Payment Processing
+        async function createPaymentIntent() {
+            try {
+                const response = await fetch('/table/api/create-payment-intent/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        items: cart,
+                        table_number: '{{ table_number }}',
+                    }),
+                });
+                const data = await response.json();
+                if (data.error) {
+                    showPaymentError(data.error);
+                    return;
                 }
+                paymentIntentId = data.order_id;
+                handlePaymentForm(data.clientSecret);
+            } catch (error) {
+                showPaymentError('Failed to create payment intent');
+            }
+        }
+
+        function handlePaymentForm(clientSecret) {
+            const form = document.getElementById('payment-form');
+            form.addEventListener('submit', async (event) => {
+                event.preventDefault();
+                setLoading(true);
+
+                try {
+                    const result = await stripe.confirmCardPayment(clientSecret, {
+                        payment_method: {
+                            card: card,
+                        }
+                    });
+
+                    if (result.error) {
+                        showPaymentError(result.error.message);
+                    } else {
+                        await checkPaymentStatus();
+                    }
+                } catch (error) {
+                    showPaymentError('Payment failed');
+                }
+
+                setLoading(false);
             });
-        });
+        }
+
+        async function checkPaymentStatus() {
+            try {
+                const response = await fetch(`/table/api/payment-status/${paymentIntentId}/`);
+                const data = await response.json();
+
+                if (data.status === 'paid') {
+                    showPaymentSuccess();
+                    clearCart();
+                } else {
+                    showPaymentError('Payment not completed');
+                }
+            } catch (error) {
+                showPaymentError('Failed to verify payment status');
+            }
+        }
+
+        // UI Helpers
+        function setLoading(isLoading) {
+            const loading = document.getElementById('payment-loading');
+            const form = document.getElementById('payment-form');
+            loading.style.display = isLoading ? 'block' : 'none';
+            form.style.display = isLoading ? 'none' : 'block';
+        }
+
+        function showPaymentSuccess() {
+            const status = document.getElementById('payment-status');
+            status.className = 'payment-status success';
+            status.textContent = 'Payment successful! Your order has been placed.';
+            status.style.display = 'block';
+            document.getElementById('payment-form').style.display = 'none';
+        }
+
+        function showPaymentError(message) {
+            const status = document.getElementById('payment-status');
+            status.className = 'payment-status error';
+            status.textContent = message;
+            status.style.display = 'block';
+        }
+
+        function showNotification(message) {
+            // You can implement a toast notification here
+            alert(message);
+        }
     </script>
 </body>
 </html>
