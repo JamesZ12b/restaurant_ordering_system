@@ -7,15 +7,36 @@
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    @media (max-width: 640px) {
-      .button-group {
-        flex-direction: column;
-        gap: 0.5rem;
-        width: 100%;
+    /* 自定义样式 - 确保在所有设备上内容居中 */
+    .table-card {
+      display: flex;
+      flex-direction: column;
+      width: 100%;
+    }
+
+    .table-number {
+      align-self: center;
+      text-align: center;
+      width: 100%;
+      margin-bottom: 0.5rem;
+    }
+
+    .qr-button {
+      width: 100%;
+      max-width: 250px;
+      margin: 0 auto;
+      display: block;
+    }
+
+    @media (min-width: 768px) {
+      /* 在更大屏幕上保持原有的左对齐 */
+      .table-card {
+        align-items: flex-start;
       }
-      .button-group a {
-        width: 100%;
-        text-align: center;
+
+      .table-number {
+        align-self: flex-start;
+        text-align: left;
       }
     }
   </style>
@@ -57,18 +78,16 @@
       {% if tables %}
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {% for table in tables|slice:"0:9" %}
-            <div class="bg-white rounded shadow p-4 flex flex-col items-start">
-              <h2 class="text-lg font-semibold mb-2">
+            <div class="bg-white rounded shadow p-4 table-card">
+              <h2 class="text-lg font-semibold table-number">
                 F1-T{{ table.table_number }}
               </h2>
-              <div class="button-group flex space-x-2">
-                <a
-                  href="{% url 'qr_code_view' table.table_number %}"
-                  class="bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700 transition-colors"
-                >
-                  View QR Code
-                </a>
-              </div>
+              <a
+                href="{% url 'qr_code_view' table.table_number %}"
+                class="bg-green-600 text-white px-3 py-2 rounded hover:bg-green-700 transition-colors text-center qr-button"
+              >
+                View QR Code
+              </a>
             </div>
           {% endfor %}
         </div>
@@ -88,18 +107,16 @@
       {% if tables|length > 9 %}
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {% for table in tables|slice:"9:" %}
-            <div class="bg-white rounded shadow p-4 flex flex-col items-start">
-              <h2 class="text-lg font-semibold mb-2">
+            <div class="bg-white rounded shadow p-4 table-card">
+              <h2 class="text-lg font-semibold table-number">
                 F2-T{{ table.table_number }}
               </h2>
-              <div class="button-group flex space-x-2">
-                <a
-                  href="{% url 'qr_code_view' table.table_number %}"
-                  class="bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700 transition-colors"
-                >
-                  View QR Code
-                </a>
-              </div>
+              <a
+                href="{% url 'qr_code_view' table.table_number %}"
+                class="bg-green-600 text-white px-3 py-2 rounded hover:bg-green-700 transition-colors text-center qr-button"
+              >
+                View QR Code
+              </a>
             </div>
           {% endfor %}
         </div>
@@ -110,13 +127,6 @@
       {% endif %}
     </div>
   </div>
-
-  <!-- 添加返回顶部按钮（在移动设备上特别有用） -->
-  <button id="back-to-top" onclick="scrollToTop()" class="fixed bottom-4 right-4 bg-gray-800 text-white rounded-full p-3 shadow-lg hover:bg-gray-700 transition-all opacity-0 invisible">
-    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7" />
-    </svg>
-  </button>
 
   <!-- 楼层切换脚本 -->
   <script>
@@ -145,26 +155,6 @@
         target.classList.remove('hidden');
         target.classList.add('block');
       }
-    }
-
-    // 返回顶部功能
-    const backToTopButton = document.getElementById('back-to-top');
-
-    window.addEventListener('scroll', () => {
-      if (window.scrollY > 300) {
-        backToTopButton.classList.remove('opacity-0', 'invisible');
-        backToTopButton.classList.add('opacity-100', 'visible');
-      } else {
-        backToTopButton.classList.remove('opacity-100', 'visible');
-        backToTopButton.classList.add('opacity-0', 'invisible');
-      }
-    });
-
-    function scrollToTop() {
-      window.scrollTo({
-        top: 0,
-        behavior: 'smooth'
-      });
     }
 
     // 页面加载默认显示一楼
