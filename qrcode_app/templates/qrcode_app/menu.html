@@ -29,7 +29,7 @@
 
         /* Menu Category Container */
         .menu-category {
-            width: 80%;
+            width: 90%;
             max-width: 1200px;
             margin: 20px auto;
         }
@@ -61,13 +61,11 @@
             transform: translateY(-5px);
         }
         .menu-item-image {
-            max-width: 250px;
-            max-height: 200px;
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
             margin: 0 auto;
             display: block;
-            border: 2px solid #ccc;
-            border-radius: 8px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         }
         .menu-content {
             padding: 15px;
@@ -94,6 +92,7 @@
             cursor: pointer;
             margin-top: 10px;
             border-radius: 5px;
+            width: 100%;
         }
         .btn:hover {
             background: #219150;
@@ -111,6 +110,7 @@
             cursor: pointer;
             font-size: 18px;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+            z-index: 100;
         }
 
         /* Cart Container */
@@ -124,12 +124,54 @@
             border-radius: 8px;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
             width: 300px;
+            z-index: 100;
+            max-height: 70vh;
+            overflow-y: auto;
+        }
+
+        #cart-list {
+            list-style-type: none;
+            padding: 0;
+            margin: 15px 0;
+        }
+
+        #cart-list li {
+            border-bottom: 1px solid #eee;
+            padding: 8px 0;
+        }
+
+        .cart-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .cart-actions .btn {
+            flex: 1;
+        }
+
+        /* Badge for cart items count */
+        .cart-badge {
+            position: absolute;
+            top: -10px;
+            right: -10px;
+            background: red;
+            color: white;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 12px;
+            font-weight: bold;
         }
 
         /* ========== Media Query for Mobile ========== */
         @media (max-width: 767px) {
             .header {
                 font-size: 20px;
+                padding: 12px;
             }
             #table-info {
                 font-size: 18px;
@@ -138,14 +180,18 @@
             .category-title {
                 font-size: 20px;
             }
+            .menu-category {
+                width: 95%;
+            }
             .menu-container {
-                /* 手机端强制单列或双列布局，可根据需要调整 */
                 grid-template-columns: 1fr;
                 gap: 15px;
             }
-            .menu-item-image {
+            .menu-item {
                 max-width: 100%;
-                height: auto;
+            }
+            .menu-item-image {
+                height: 180px;
             }
             .menu-content h3 {
                 font-size: 16px;
@@ -161,14 +207,26 @@
             .cart {
                 font-size: 16px;
                 padding: 10px;
+                bottom: 15px;
+                right: 15px;
             }
             .cart-container {
                 width: 90%;
                 right: 5%;
+                left: 5%;
                 bottom: 70px;
             }
         }
 
+        /* Tablet styles */
+        @media (min-width: 768px) and (max-width: 1023px) {
+            .menu-container {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            .menu-category {
+                width: 90%;
+            }
+        }
     </style>
 </head>
 <body>
@@ -257,13 +315,19 @@
     </div>
 
     <!-- 🛒 Shopping Cart -->
-    <div class="cart" onclick="toggleCart()">🛒 View Cart</div>
+    <div class="cart" id="cart-button" onclick="toggleCart()">
+        🛒 View Cart
+        <span class="cart-badge" id="cart-badge">0</span>
+    </div>
+
     <div class="cart-container" id="cart-container">
         <h3>Shopping Cart</h3>
         <ul id="cart-list"></ul>
         <strong>Total: $<span id="total-price">0.00</span></strong>
-        <button class="btn" onclick="clearCart()">Clear Cart</button>
-        <button class="btn" onclick="checkout()">Checkout</button>
+        <div class="cart-actions">
+            <button class="btn" onclick="clearCart()">Clear Cart</button>
+            <button class="btn" onclick="checkout()">Checkout</button>
+        </div>
     </div>
 
     <script>
@@ -271,36 +335,74 @@
         let totalPrice = 0;
 
         function addToCart(itemName, itemPrice) {
-            cart.push({ name: itemName, price: itemPrice });
-            totalPrice += itemPrice;
+            // Check if item already exists in cart
+            const existingItem = cart.find(item => item.name === itemName);
+
+            if (existingItem) {
+                existingItem.quantity += 1;
+            } else {
+                cart.push({
+                    name: itemName,
+                    price: itemPrice,
+                    quantity: 1
+                });
+            }
+
+            updateCartBadge();
             updateCart();
+        }
+
+        function updateCartBadge() {
+            const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
+            const badge = document.getElementById('cart-badge');
+
+            badge.textContent = totalItems;
+            badge.style.display = totalItems > 0 ? 'flex' : 'none';
         }
 
         function updateCart() {
             const cartList = document.getElementById('cart-list');
             cartList.innerHTML = '';
+
+            totalPrice = 0;
+
             cart.forEach(item => {
                 const li = document.createElement('li');
-                li.textContent = `${item.name} - $${item.price.toFixed(2)}`;
+                const itemTotal = item.price * item.quantity;
+                totalPrice += itemTotal;
+
+                li.textContent = `${item.name} (${item.quantity}) - $${itemTotal.toFixed(2)}`;
                 cartList.appendChild(li);
             });
+
             document.getElementById('total-price').textContent = totalPrice.toFixed(2);
         }
 
         function clearCart() {
             cart = [];
             totalPrice = 0;
+            updateCartBadge();
             updateCart();
         }
 
         function toggleCart() {
             const cartContainer = document.getElementById('cart-container');
-            cartContainer.style.display = cartContainer.style.display === 'none' ? 'block' : 'none';
+            cartContainer.style.display = cartContainer.style.display === 'none' || cartContainer.style.display === '' ? 'block' : 'none';
         }
 
         function checkout() {
+            if (cart.length === 0) {
+                alert('Your cart is empty.');
+                return;
+            }
+
             alert('Checkout functionality not implemented yet.');
         }
+
+        // Initialize cart badge
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('cart-badge').style.display = 'none';
+        });
     </script>
 </body>
 </html>

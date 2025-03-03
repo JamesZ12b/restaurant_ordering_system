@@ -4,11 +4,75 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Table {{ table.table_number }} QR Code</title>
+    <!-- Tailwind CSS to match the table listing page -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @media print {
+            .no-print {
+                display: none;
+            }
+            body {
+                margin: 0;
+                padding: 0;
+            }
+            .print-centered {
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                text-align: center;
+            }
+        }
+    </style>
 </head>
-<body>
-    <h1>Table {{ table.table_number }} QR Code</h1>
-    <img src="{{ table.qr_code.url }}" alt="QR Code for Table {{ table.table_number }}">
-    <p>Scan the QR code above to access the table menu</p>
-    <a href="{% url 'table_list' %}">Return</a>
+<body class="bg-gray-100 text-gray-800 min-h-screen flex flex-col items-center p-4">
+    <div class="container max-w-md mx-auto bg-white rounded-lg shadow-md p-6 my-8">
+        <header class="mb-6 text-center">
+            <h1 class="text-2xl font-bold mb-2">Table {{ table.table_number }} QR Code</h1>
+            <p class="text-gray-600 text-sm">Scan to access digital menu</p>
+        </header>
+
+        <div class="flex justify-center mb-6">
+            <div class="p-2 bg-white rounded-lg border-2 border-gray-200 shadow-sm">
+                <img
+                    src="{{ table.qr_code.url }}"
+                    alt="QR Code for Table {{ table.table_number }}"
+                    class="w-64 h-64 object-contain"
+                >
+            </div>
+        </div>
+
+        <div class="text-center mb-6">
+            <p class="text-gray-700">Scan the QR code above to access the table menu</p>
+            <p class="text-sm text-gray-500 mt-2">Table ID: {{ table.table_number }}</p>
+        </div>
+
+        <div class="flex justify-center space-x-4 no-print">
+            <a
+                href="{% url 'table_list' %}"
+                class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded transition-colors"
+            >
+                Return to Tables
+            </a>
+
+            <button
+                onclick="window.print()"
+                class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded transition-colors"
+            >
+                Print QR Code
+            </button>
+        </div>
+    </div>
+
+    <!-- Print-optimized version that appears only when printing -->
+    <div class="hidden print-centered">
+        <h1 class="text-3xl font-bold mb-4">Table {{ table.table_number }}</h1>
+        <img
+            src="{{ table.qr_code.url }}"
+            alt="QR Code for Table {{ table.table_number }}"
+            class="w-80 h-80 object-contain mb-4"
+        >
+        <p class="text-xl">Scan to access our digital menu</p>
+    </div>
 </body>
 </html>
