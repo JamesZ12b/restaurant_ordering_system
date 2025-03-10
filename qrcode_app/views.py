@@ -23,7 +23,7 @@ def generate_qr_code(table_number):
 
     # 生成二维码
     qr = qrcode.QRCode(version=1, box_size=10, border=5)
-    qr.add_data(f"http://localhost:8000/table/menu/{table_number}/")  # 假设这是餐桌的链接
+    qr.add_data(f"http://114.55.113.74:8000/table/menu/{table_number}/")  # 假设这是餐桌的链接
     qr.make(fit=True)
 
     img = qr.make_image(fill='black', back_color='white')
