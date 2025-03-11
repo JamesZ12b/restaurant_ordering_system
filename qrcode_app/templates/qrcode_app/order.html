@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>提交订单</title>
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+    <script src="https://js.stripe.com/v3/"></script>
+</head>
+<body>
+    <div class="header">提交订单</div>
+    <h2>您的订单</h2>
+    <ul id="order-list"></ul>
+    <div class="cart-total">总计: $<span id="total-price">0.00</span></div>
+    <button class="btn" id="confirm-order-btn">确认订单</button>
+    <button class="btn btn-secondary" onclick="clearCart()">清空购物车</button>
+
+    <script>
+        // Get cart data from local storage or session
+        const cart = JSON.parse(localStorage.getItem('cart')) || [];
+        let totalPrice = 0;
+
+        // Update order list display and total price
+        function updateOrderList() {
+            const orderList = document.getElementById('order-list');
+            orderList.innerHTML = '';
+
+            cart.forEach(item => {
+                const li = document.createElement('li');
+                li.innerHTML = `${item.name} - $${item.price.toFixed(2)} × ${item.quantity}`;
+                orderList.appendChild(li);
+                totalPrice += item.price * item.quantity;
+            });
+
+            document.getElementById('total-price').textContent = totalPrice.toFixed(2);
+        }
+
+        // Handle order confirmation
+        document.getElementById('confirm-order-btn').addEventListener('click', async function() {
+            if (cart.length === 0) {
+                alert("请先添加商品到购物车");
+                return;
+            }
+
+            const itemsWithQuantity = cart.map(item => ({
+                name: item.name,
+                price: item.price,
+                quantity: item.quantity
+            }));
+
+            try {
+                const response = await fetch('/table/api/create-payment-intent/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        items: itemsWithQuantity,
+                        table_number: '{{ table_number }}'  // Assuming you can pass this from the view
+                    }),
+                });
+
+                const data = await response.json();
+                if (data.error) {
+                    alert(data.error);
+                    return;
+                }
+
+                // Redirect to payment modal or retain for further use
+                alert("订单已提交，进行支付!");
+                // Here you could redirect to payment or invoke the payment UI
+
+                // Clear cart after order submission
+                localStorage.removeItem('cart');
+            } catch (error) {
+                console.error('订单提交失败:', error);
+            }
+        });
+
+        // Initialize the order list
+        updateOrderList();
+    </script>
+</body>
+</html>

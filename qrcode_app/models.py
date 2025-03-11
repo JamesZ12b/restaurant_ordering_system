@@ -61,3 +61,11 @@ class Order(models.Model):
     def __str__(self):
         return f"Order {self.id} - Table {self.table.table_number}"
 
+class KitchenOrder(models.Model):
+    order = models.ForeignKey(Order, on_delete=models.CASCADE)
+    status = models.CharField(max_length=20, choices=[('pending', '待处理'), ('preparing', '准备中'), ('completed', '已完成'), ('cancelled', '已取消')])
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"Order {self.order.id} - Status: {self.status}"

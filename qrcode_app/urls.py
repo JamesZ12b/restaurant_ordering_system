@@ -3,7 +3,8 @@
 from django.conf import settings
 from django.conf.urls.static import static
 from django.urls import path
-from .views import create_table, view_qr_code, table_list, menu_view, create_payment_intent,webhook, payment_status
+from .views import create_table, view_qr_code, table_list, menu_view, create_payment_intent, webhook, payment_status, \
+    kitchen_order_display, update_kitchen_order_status, order_view
 
 urlpatterns = [
     path('', table_list, name='table_list'),  # 餐桌列表
@@ -13,6 +14,9 @@ urlpatterns = [
     path('api/create-payment-intent/', create_payment_intent, name='create_payment_intent'),
     path('api/webhook/', webhook, name='webhook'),
     path('api/payment-status/<int:order_id>/', payment_status, name='payment_status'),
+    path('kitchen/orders/', kitchen_order_display, name='kitchen_order_display'),
+    path('kitchen/orders/update/<int:kitchen_order_id>/', update_kitchen_order_status, name='update_kitchen_order_status'),
+    path('order/', order_view, name='order_view'),  # 新增订单页面的路径
 ]
 
 if settings.DEBUG:

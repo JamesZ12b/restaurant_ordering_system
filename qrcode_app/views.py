@@ -1,7 +1,7 @@
 # qrcode_app/views.py
 
 from django.shortcuts import render, redirect, get_object_or_404
-from .models import Table, MenuItem,Floor
+from .models import Table, MenuItem, Floor, KitchenOrder
 import os
 import qrcode
 import stripe
@@ -83,6 +83,10 @@ def menu_view(request, table_number):
         return render(request, 'qrcode_app/menu.html', context)
     except Table.DoesNotExist:
         return redirect('table_list')
+
+def order_view(request):
+    table_number = request.GET.get('table_number')
+    return render(request, 'qrcode_app/order.html', {'table_number': table_number})
 
 
 def floor_layout(request):
@@ -211,3 +215,17 @@ def payment_status(request, order_id):
         })
     except Order.DoesNotExist:
         return JsonResponse({'error': 'Order not found'}, status=404)
+
+
+def kitchen_order_display(request):
+    kitchen_orders = KitchenOrder.objects.all()
+    return render(request, 'qrcode_app/kitchen_order_display.html', {'kitchen_orders': kitchen_orders})
+
+def update_kitchen_order_status(request, kitchen_order_id):
+    if request.method == 'POST':
+        new_status = request.POST.get('status')
+        kitchen_order = get_object_or_404(KitchenOrder, id=kitchen_order_id)
+        kitchen_order.status = new_status
+        kitchen_order.save()
+        return redirect('kitchen_order_display')
+    return redirect('kitchen_order_display')
