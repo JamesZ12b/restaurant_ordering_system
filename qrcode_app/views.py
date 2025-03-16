@@ -1,7 +1,6 @@
 # qrcode_app/views.py
-
 from django.shortcuts import render, redirect, get_object_or_404
-from .models import Table, MenuItem,Floor
+from .models import Table, MenuItem,Floor,Order
 import os
 import qrcode
 import stripe
@@ -11,7 +10,7 @@ from django.core.files.base import ContentFile
 from django.conf import settings
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
-from .models import Table, MenuItem, Order
+
 
 stripe.api_key = settings.STRIPE_SECRET_KEY
 
@@ -211,3 +210,45 @@ def payment_status(request, order_id):
         })
     except Order.DoesNotExist:
         return JsonResponse({'error': 'Order not found'}, status=404)
+
+def kitchen_order_view(request):
+    orders = Order.objects.filter(status='pending')  # 或使用其他条件
+    context = {
+        'orders': orders,
+    }
+    return render(request, 'qrcode_app/kitchen_order_display.html', context)
+
+
+@csrf_exempt
+def submit_order(request):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        items = data.get('items', [])
+        table_number = data.get('table_number')
+
+        # 创建订单
+        table = get_object_or_404(Table, table_number=table_number)
+        order = Order.objects.create(table=table)
+
+        for item in items:
+            order.items.append({
+                "name": item['name'],
+                "price": item['price'],
+                "quantity": item['quantity']
+            })
+
+        order.save()
+
+        return JsonResponse({'success': True})
+    return JsonResponse({'success': False, 'error': 'Invalid request method'}, status=400)
+
+@csrf_exempt
+def mark_order_done(request, order_id):
+    if request.method == 'POST':
+        try:
+            order = Order.objects.get(id=order_id)
+            order.status = 'done'
+            order.save()
+            return JsonResponse({'success': True})
+        except Order.DoesNotExist:
+            return JsonResponse({'success': False, 'error': 'Order not found'}, status=404)

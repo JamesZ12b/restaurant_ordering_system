@@ -573,6 +573,7 @@
         <div class="cart-total">Total: $<span id="total-price">0.00</span></div>
         <button class="btn" onclick="showPaymentModal()">Proceed to Payment</button>
         <button class="btn btn-secondary" onclick="clearCart()">Clear Cart</button>
+        <button class="btn" onclick="submitOrder()">Submit Order</button>
     </div>
 
     <!-- Toast Container -->
@@ -605,6 +606,44 @@
         const elements = stripe.elements();
         const card = elements.create('card');
         let paymentIntentId = null;
+
+        async function submitOrder() {
+            if (cart.length === 0) {
+                showToast('Please add items to your cart before submitting the order.', 'error');
+                return;
+            }
+
+            const itemsWithQuantity = cart.map(item => ({
+                name: item.name,
+                price: item.price,
+                quantity: item.quantity
+            }));
+
+            try {
+                const response = await fetch('/table/api/submit-order/', {  // 确保这个 URL 正确
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': '{{ csrf_token }}'  // 包含 CSRF 令牌
+                    },
+                    body: JSON.stringify({
+                        items: itemsWithQuantity,
+                        table_number: '{{ table_number }}'  // 包含餐桌编号
+                    }),
+                });
+
+                const data = await response.json();
+                if (data.success) {
+                    showToast('Order submitted successfully!', 'success');
+                    clearCart(); // 提交后清空购物车
+                } else {
+                    showToast(data.error || 'Failed to submit the order', 'error');
+                }
+            } catch (error) {
+                console.error('Error submitting order:', error);
+                showToast('An error occurred while submitting the order.', 'error');
+            }
+        }
 
         // Mount card element
         card.mount('#card-element');

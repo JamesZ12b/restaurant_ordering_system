@@ -3,7 +3,8 @@
 from django.conf import settings
 from django.conf.urls.static import static
 from django.urls import path
-from .views import create_table, view_qr_code, table_list, menu_view, create_payment_intent,webhook, payment_status
+from .views import create_table, view_qr_code, table_list, menu_view, create_payment_intent, webhook, payment_status, \
+    kitchen_order_view, mark_order_done, submit_order
 
 urlpatterns = [
     path('', table_list, name='table_list'),  # 餐桌列表
@@ -13,6 +14,10 @@ urlpatterns = [
     path('api/create-payment-intent/', create_payment_intent, name='create_payment_intent'),
     path('api/webhook/', webhook, name='webhook'),
     path('api/payment-status/<int:order_id>/', payment_status, name='payment_status'),
+    path('kitchen/orders/', kitchen_order_view, name='kitchen_order_view'),
+    path('mark-order-done/<int:order_id>/', mark_order_done, name='mark_order_done'),
+    path('submit-order/', submit_order, name='submit_order'),
+
 ]
 
 if settings.DEBUG:
