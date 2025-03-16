@@ -161,16 +161,46 @@
 
     <script>
         function refreshOrders() {
-            // Implement your logic to refresh orders (AJAX call)
             console.log("Refreshing orders...");
+            // 实现您的逻辑以刷新订单（可以使用 AJAX 调用）
         }
 
         function clearCompletedOrders() {
-            // Implement your logic to clear completed orders
             console.log("Clearing completed orders...");
+            fetch('/table/api/clear-completed-orders/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    console.log(`Deleted ${data.deleted_count} completed orders.`);
+                    // 从页面中移除已完成的订单卡片
+                    const orderContainer = document.getElementById('order-container');
+                    const completedOrders = document.querySelectorAll('.order-card');
+
+                    completedOrders.forEach(orderCard => {
+                        const timerElement = orderCard.querySelector('.timer');
+                        if (timerElement.innerText === 'Completed') {
+                            orderContainer.removeChild(orderCard); // 从 DOM 中删除订单卡片
+                        }
+                    });
+
+                    // 更新订单计数
+                    const currentCount = document.querySelectorAll('.order-card').length;
+                    document.getElementById('order-count').innerText = currentCount;
+                } else {
+                    console.error('Failed to clear completed orders:', data.error);
+                }
+            })
+            .catch(error => console.error('Error:', error));
         }
 
         function markOrderDone(orderId) {
+            console.log(`Marking order ${orderId} as done...`);  // 调试信息
             fetch(`/table/api/mark-order-done/${orderId}/`, {
                 method: 'POST',
                 headers: {
@@ -178,13 +208,17 @@
                     'X-CSRFToken': '{{ csrf_token }}'
                 }
             })
-            .then(response => {
-                if (response.ok) {
+            .then(response => response.json()) // 解析为JSON
+            .then(data => {
+                if (data.success) {
                     const orderCard = document.getElementById(`order-${orderId}`);
-                    orderCard.style.borderLeft = '5px solid green'; // 更改颜色为绿色
-                    document.querySelector('.timer', orderCard).innerText = 'Completed'; // 更新状态
+                    orderCard.style.borderLeft = '5px solid green'; // 绿色
+                    const timerElement = orderCard.querySelector('.timer');
+                    timerElement.innerText = 'Completed'; // 更新状态
                     const doneButton = orderCard.querySelector('.mark-done');
                     doneButton.style.display = 'none'; // 隐藏“完成”按钮
+                } else {
+                    console.error('Failed to mark order:', data.error);
                 }
             })
             .catch(error => console.error('Error:', error));
@@ -194,6 +228,8 @@
             const orders = document.querySelectorAll('.order-card');
             document.getElementById('order-count').innerText = orders.length;
         });
+
+
     </script>
 </body>
 </html>

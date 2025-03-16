@@ -8,8 +8,8 @@ import json
 from django.shortcuts import render, redirect
 from django.core.files.base import ContentFile
 from django.conf import settings
-from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
+from django.http import JsonResponse
 
 
 stripe.api_key = settings.STRIPE_SECRET_KEY
@@ -214,7 +214,7 @@ def payment_status(request, order_id):
 def kitchen_order_view(request):
     orders = Order.objects.filter(status='pending')  # 或使用其他条件
     context = {
-        'orders': orders,
+        'orders': orders
     }
     return render(request, 'qrcode_app/kitchen_order_display.html', context)
 
@@ -228,27 +228,37 @@ def submit_order(request):
 
         # 创建订单
         table = get_object_or_404(Table, table_number=table_number)
-        order = Order.objects.create(table=table)
+
+        # 创建实际订单时，确保设置初始状态和其他必要字段
+        order = Order.objects.create(
+            table=table,
+            total_amount=sum(item['price'] * item['quantity'] for item in items),  # 计算总金额
+            status='pending'  # 初始状态设为 pending
+        )
 
         for item in items:
-            order.items.append({
-                "name": item['name'],
-                "price": item['price'],
-                "quantity": item['quantity']
-            })
+            # 假设您有一个 MenuItem 模型来存储菜单项信息
+            menu_item = MenuItem.objects.get(id=item['id'])  # 假设传递的是菜单项 ID
+            order.items.create(menu_item=menu_item, quantity=item['quantity'])
 
         order.save()
 
-        return JsonResponse({'success': True})
+        return JsonResponse({'success': True, 'order_id': order.id})  # 返回成功和订单 ID
     return JsonResponse({'success': False, 'error': 'Invalid request method'}, status=400)
 
 @csrf_exempt
 def mark_order_done(request, order_id):
     if request.method == 'POST':
-        try:
-            order = Order.objects.get(id=order_id)
-            order.status = 'done'
-            order.save()
-            return JsonResponse({'success': True})
-        except Order.DoesNotExist:
-            return JsonResponse({'success': False, 'error': 'Order not found'}, status=404)
+        order = get_object_or_404(Order, id=order_id)
+        order.status = 'completed'  # 将状态更新为已完成
+        order.save()  # 保存订单修改
+        return JsonResponse({'success': True})
+    return JsonResponse({'success': False, 'error': 'Invalid request method'}, status=400)
+
+def clear_completed_orders(request):
+    if request.method == 'POST':
+        # 删除已完成状态的订单
+        deleted_count, _ = Order.objects.filter(status='completed').delete()
+        return JsonResponse({'success': True, 'deleted_count': deleted_count})
+    return JsonResponse({'success': False, 'error': 'Invalid request method'}, status=400)
+
