@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Kitchen Display System</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
-
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -53,16 +52,16 @@
 
         .order-container {
             display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
+            flex-direction: column; /* 使订单垂直排列 */
+            align-items: center; /* 使订单居中 */
         }
 
-        .order-card {
+        .table-card {
             background: white; /* 背景颜色 */
             border-radius: 8px;
             padding: 15px;
             margin: 10px;
-            width: 250px; /* 卡片宽度 */
+            width: 80%; /* 卡片宽度 */
             box-shadow: 0 4px 15px rgba(0,0,0,0.2);
             color: #333;
         }
@@ -137,23 +136,32 @@
 
     <div class="order-container" id="order-container">
         {% if orders %}
-            {% for order in orders %}
-            <div class="order-card" id="order-{{ order.id }}" style="border-left: 5px solid {% if order.status == 'pending' %}red{% elif order.status == 'preparing' %}orange{% else %}green{% endif %};">
-                <div class="order-header">
-                    <h3>Table T{{ order.table.table_number }}</h3>
-                    <div class="timer">{{ order.created_at|time:"H:i" }} ({{ order.status }})</div>
-                </div>
-                <div class="order-status">Dine in</div>
-                {% for item in order.items %}
-                <div class="order-item">
-                    <span>{{ item.name }}</span>
-                    <span>{{ item.quantity }} x</span>
-                </div>
-                {% endfor %}
-                <div class="order-total">Total: ${{ order.total_amount }}</div>
-                <button class="mark-done" onclick="markOrderDone({{ order.id }})">Done</button>
+            {% regroup orders by table.table_number as grouped_orders %}
+            {% for group in grouped_orders %}
+        <div class="table-card">
+            <div class="order-header">
+                <h3>Table T{{ group.grouper }}</h3>
+                <div class="timer">{{ group.list.0.created_at|time:"H:i" }}</div>
+            </div>
+            <div class="order-status">Dine in</div>
+
+            {% for order in group.list %}
+            {% for item in order.items %}
+            <div class="order-item">
+                <span>{{ item.name }}</span>
+                <span>{{ item.quantity }} x</span>
             </div>
             {% endfor %}
+            {% endfor %}
+
+            {% if group.list %}
+            <div class="order-total">Total: ${{ group.list.0.total_amount }}</div> <!-- 显示总价 -->
+            {% else %}
+            <div class="order-total">Total: $0.00</div> <!-- 如果没有订单则显示总价为0 -->
+            {% endif %}
+            <button class="mark-done" onclick="markOrderDone({{ group.list.0.id }})">Done</button> <!-- 只显示一个完成按钮 -->
+        </div>
+        {% endfor %}
         {% else %}
             <div class="no-orders">No orders found.<br>Click "Load Test Data" to see examples, or wait for new orders.</div>
         {% endif %}
@@ -178,19 +186,17 @@
             .then(data => {
                 if (data.success) {
                     console.log(`Deleted ${data.deleted_count} completed orders.`);
-                    // 从页面中移除已完成的订单卡片
                     const orderContainer = document.getElementById('order-container');
-                    const completedOrders = document.querySelectorAll('.order-card');
+                    const completedOrders = document.querySelectorAll('.table-card');
 
-                    completedOrders.forEach(orderCard => {
-                        const timerElement = orderCard.querySelector('.timer');
-                        if (timerElement.innerText === 'Completed') {
-                            orderContainer.removeChild(orderCard); // 从 DOM 中删除订单卡片
+                    completedOrders.forEach(card => {
+                        const button = card.querySelector('.mark-done');
+                        if (button && button.style.display === 'none') {
+                            orderContainer.removeChild(card); // 从 DOM 中删除订单卡片
                         }
                     });
 
-                    // 更新订单计数
-                    const currentCount = document.querySelectorAll('.order-card').length;
+                    const currentCount = document.querySelectorAll('.table-card').length;
                     document.getElementById('order-count').innerText = currentCount;
                 } else {
                     console.error('Failed to clear completed orders:', data.error);
@@ -200,7 +206,7 @@
         }
 
         function markOrderDone(orderId) {
-            console.log(`Marking order ${orderId} as done...`);  // 调试信息
+            console.log(`Marking order ${orderId} as done...`);
             fetch(`/table/api/mark-order-done/${orderId}/`, {
                 method: 'POST',
                 headers: {
@@ -208,15 +214,11 @@
                     'X-CSRFToken': '{{ csrf_token }}'
                 }
             })
-            .then(response => response.json()) // 解析为JSON
+            .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    const orderCard = document.getElementById(`order-${orderId}`);
-                    orderCard.style.borderLeft = '5px solid green'; // 绿色
-                    const timerElement = orderCard.querySelector('.timer');
-                    timerElement.innerText = 'Completed'; // 更新状态
-                    const doneButton = orderCard.querySelector('.mark-done');
-                    doneButton.style.display = 'none'; // 隐藏“完成”按钮
+                    console.log(`Order ${orderId} marked as done.`);
+                    // Update UI to reflect the order's new status
                 } else {
                     console.error('Failed to mark order:', data.error);
                 }
@@ -225,10 +227,9 @@
         }
 
         document.addEventListener('DOMContentLoaded', function() {
-            const orders = document.querySelectorAll('.order-card');
+            const orders = document.querySelectorAll('.table-card');
             document.getElementById('order-count').innerText = orders.length;
         });
-
 
     </script>
 </body>

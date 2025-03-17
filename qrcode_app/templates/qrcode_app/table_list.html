@@ -45,7 +45,7 @@
   <div class="container mx-auto p-4">
     <h1 class="text-2xl font-bold mb-4">Restaurant Tables</h1>
 
-    <!-- 导航栏：创建按钮和楼层切换 -->
+    <!-- 导航栏：创建按钮、楼层切换和厨房系统按钮 -->
     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-6">
       <!-- "Create New Table" 按钮 -->
       <a
@@ -53,6 +53,14 @@
         class="inline-block bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors"
       >
         + Create New Table
+      </a>
+
+      <!-- 跳转到厨房系统按钮 -->
+      <a
+        href="{% url 'kitchen_order_view' %}"
+        class="inline-block bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors"
+      >
+        Kitchen System
       </a>
 
       <!-- 楼层切换按钮 -->
