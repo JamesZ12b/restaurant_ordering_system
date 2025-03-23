@@ -247,11 +247,14 @@ def submit_order(request):
     return JsonResponse({'success': False, 'error': 'Invalid request method'}, status=400)
 
 @csrf_exempt
-def mark_order_done(request, order_id):
+def mark_all_orders_done(request, table_number):
+    """
+    将某桌(table_number)下所有未完成的订单置为 `completed` 状态
+    """
     if request.method == 'POST':
-        order = get_object_or_404(Order, id=order_id)
-        order.status = 'completed'  # 将状态更新为已完成
-        order.save()  # 保存订单修改
+        from .models import Order
+        orders = Order.objects.filter(table__table_number=table_number, status__in=['pending','preparing'])
+        orders.update(status='completed')
         return JsonResponse({'success': True})
     return JsonResponse({'success': False, 'error': 'Invalid request method'}, status=400)
 

@@ -159,7 +159,7 @@
             {% else %}
             <div class="order-total">Total: $0.00</div> <!-- 如果没有订单则显示总价为0 -->
             {% endif %}
-            <button class="mark-done" onclick="markOrderDone({{ group.list.0.id }})">Done</button> <!-- 只显示一个完成按钮 -->
+            <button class="mark-done" onclick="markOrderDone('{{ group.grouper }}')">Done</button>
         </div>
         {% endfor %}
         {% else %}
@@ -205,31 +205,34 @@
             .catch(error => console.error('Error:', error));
         }
 
-        function markOrderDone(orderId) {
-            console.log(`Marking order ${orderId} as done...`);
-            fetch(`/table/api/mark-order-done/${orderId}/`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': '{{ csrf_token }}'
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    console.log(`Order ${orderId} marked as done.`);
-                    // Update UI to reflect the order's new status
-                } else {
-                    console.error('Failed to mark order:', data.error);
-                }
-            })
-            .catch(error => console.error('Error:', error));
+    function markOrderDone(tableNumber) {
+    console.log(`Marking all orders for table T${tableNumber} as done...`);
+    fetch(`/table/api/mark-all-orders-done/${tableNumber}/`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': '{{ csrf_token }}'
         }
-
-        document.addEventListener('DOMContentLoaded', function() {
-            const orders = document.querySelectorAll('.table-card');
-            document.getElementById('order-count').innerText = orders.length;
-        });
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            console.log(`All orders for table T${tableNumber} marked as done.`);
+            // 前端移除该桌子对应的卡片
+            const orderCards = document.querySelectorAll('.table-card');
+            orderCards.forEach(card => {
+                // 找到标题含有 "Table Txx" 的卡片
+                const title = card.querySelector('h3')?.textContent || "";
+                if (title.includes(`Table T${tableNumber}`)) {
+                    card.remove();  // 从DOM中彻底移除
+                }
+            });
+        } else {
+            console.error('Failed to mark orders as done:', data.error);
+        }
+    })
+    .catch(error => console.error('Error:', error));
+}
 
     </script>
 </body>
