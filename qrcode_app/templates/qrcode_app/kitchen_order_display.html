@@ -1,239 +1,206 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kitchen Display System</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
-    <style>
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #4267B2; /* 背景颜色 */
-            margin: 0;
-            padding: 20px;
-            color: white;
-        }
+  <meta charset="UTF-8" />
+  <title>Kitchen Display System</title>
 
-        .header {
-            text-align: center;
-            margin-bottom: 20px;
-        }
+  <!-- 使用 Tailwind CDN (development only) -->
+  <script src="https://cdn.tailwindcss.com"></script>
 
-        .header h1 {
-            font-size: 2.5rem;
-            margin: 0;
-        }
-
-        .header h2 {
-            font-size: 1.2rem;
-            margin: 5px 0;
-        }
-
-        .button-container {
-            text-align: center;
-            margin-bottom: 20px;
-        }
-
-        .button-container button {
-            background-color: #fff;
-            color: #4267B2;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 5px;
-            font-size: 1rem;
-            cursor: pointer;
-            margin: 0 10px;
-            transition: background-color 0.3s;
-        }
-
-        .button-container button:hover {
-            background-color: #e0e0e0;
-        }
-
-        .order-container {
-            display: flex;
-            flex-direction: column; /* 使订单垂直排列 */
-            align-items: center; /* 使订单居中 */
-        }
-
-        .table-card {
-            background: white; /* 背景颜色 */
-            border-radius: 8px;
-            padding: 15px;
-            margin: 10px;
-            width: 80%; /* 卡片宽度 */
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-            color: #333;
-        }
-
-        .order-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .order-header h3 {
-            margin: 0;
-            font-size: 1.5rem;
-            color: #333;
-        }
-
-        .order-status {
-            font-size: 0.9rem;
-            color: #666;
-        }
-
-        .order-item {
-            display: flex;
-            justify-content: space-between;
-            border-bottom: 1px solid #eee;
-            padding: 5px 0;
-        }
-
-        .order-total {
-            font-weight: bold;
-            margin: 10px 0;
-        }
-
-        .mark-done {
-            background-color: #27ae60;
-            color: white;
-            padding: 10px 15px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            transition: background-color 0.3s;
-            display: block; /* 使按钮全宽 */
-            margin: auto;  /* 居中 */
-        }
-
-        .mark-done:hover {
-            background-color: #219150;
-        }
-
-        .no-orders {
-            text-align: center;
-            font-size: 1.5rem;
-            color: #999;
-        }
-
-        .timer {
-            font-size: 0.9rem;
-            color: #666;
-        }
-    </style>
+  <style>
+    /* 已完成的卡片背景 */
+    .card-completed {
+      background-color: #d8f8d8; /* 浅绿色 */
+    }
+    /* 已完成的按钮样式 */
+    .button-completed {
+      background-color: gray;
+      cursor: not-allowed;
+    }
+  </style>
 </head>
-<body>
-    <div class="header">
-        <h1>F&B Dine-In KDS</h1>
-        <h2>Number of orders: <span id="order-count">{{ orders|length }}</span></h2>
+<body class="bg-blue-600 min-h-screen text-white p-4">
+  <div class="max-w-7xl mx-auto">
+    <header class="text-center mb-6">
+      <h1 class="text-3xl font-bold">F&B Dine-In KDS</h1>
+      <h2 class="text-lg">
+        Number of orders: <span id="order-count">{{ orders|length }}</span>
+      </h2>
+    </header>
+
+    <!-- 操作按钮区 -->
+    <div class="flex flex-row justify-center space-x-2 mb-6">
+      <button class="bg-white text-blue-600 px-4 py-2 rounded"
+              onclick="refreshOrders()">Refresh Orders</button>
+      <button class="bg-white text-blue-600 px-4 py-2 rounded"
+              onclick="clearCompletedOrders()">Clear Completed Orders</button>
     </div>
 
-    <div class="button-container">
-        <button onclick="refreshOrders()">Refresh Orders</button>
-        <button onclick="clearCompletedOrders()">Clear Completed Orders</button>
-    </div>
-
-    <div class="order-container" id="order-container">
-        {% if orders %}
-            {% regroup orders by table.table_number as grouped_orders %}
-            {% for group in grouped_orders %}
-        <div class="table-card">
-            <div class="order-header">
-                <h3>Table T{{ group.grouper }}</h3>
-                <div class="timer">{{ group.list.0.created_at|time:"H:i" }}</div>
+    <!-- 容器: flex-row + flex-wrap + gap-4 让卡片横向摆放并自动换行 -->
+    <div 
+      id="order-container"
+      class="flex flex-row flex-wrap gap-4 justify-center"
+    >
+      {% if orders %}
+        {% regroup orders by table.table_number as grouped_orders %}
+        {% for group in grouped_orders %}
+        
+        <!-- 单个桌子卡片 -->
+        <div
+          id="table-card-{{ group.grouper }}"
+          class="bg-white text-gray-800 rounded shadow p-4 w-64 table-card"
+        >
+          <!-- 头部: 显示桌号和下单时间 -->
+          <div class="flex items-center justify-between mb-2">
+            <h3 class="text-xl font-semibold">Table T{{ group.grouper }}</h3>
+            <div class="text-sm text-gray-500">
+              {{ group.list.0.created_at|time:"H:i" }}
             </div>
-            <div class="order-status">Dine in</div>
+          </div>
 
-            {% for order in group.list %}
+          <!-- 订单状态 -->
+          <div id="order-status-{{ group.grouper }}" class="text-sm text-gray-700 mb-2">
+            Dine in
+          </div>
+
+          <!-- 循环展示订单里所有菜品 (点击菜名可加删除线) -->
+          {% for order in group.list %}
             {% for item in order.items %}
-            <div class="order-item">
-                <span>{{ item.name }}</span>
-                <span>{{ item.quantity }} x</span>
+            <div class="flex justify-between border-b border-gray-300 py-1">
+              <span class="cursor-pointer" onclick="toggleItemComplete(this)">
+                {{ item.name }}
+              </span>
+              <span>{{ item.quantity }} x</span>
             </div>
             {% endfor %}
-            {% endfor %}
+          {% endfor %}
 
-            {% if group.list %}
-            <div class="order-total">Total: ${{ group.list.0.total_amount }}</div> <!-- 显示总价 -->
-            {% else %}
-            <div class="order-total">Total: $0.00</div> <!-- 如果没有订单则显示总价为0 -->
-            {% endif %}
-            <button class="mark-done" onclick="markOrderDone('{{ group.grouper }}')">Done</button>
+          <!-- 显示订单总价 (注意是否要统计多份订单总和) -->
+          {% if group.list %}
+            <div class="font-bold mt-3">
+              Total: ${{ group.list.0.total_amount }}
+            </div>
+          {% else %}
+            <div class="font-bold mt-3">
+              Total: $0.00
+            </div>
+          {% endif %}
+
+          <!-- Done 按钮 -->
+          <button
+            id="mark-done-{{ group.grouper }}"
+            class="mark-done bg-green-600 text-white w-full mt-4 py-2 rounded"
+            onclick="markOrderDone('{{ group.grouper }}')"
+          >
+            Done
+          </button>
         </div>
+
         {% endfor %}
-        {% else %}
-            <div class="no-orders">No orders found.<br>Click "Load Test Data" to see examples, or wait for new orders.</div>
-        {% endif %}
+      {% else %}
+        <div class="text-center text-xl text-gray-200">
+          No orders found.<br>
+          Click "Load Test Data" to see examples, or wait for new orders.
+        </div>
+      {% endif %}
     </div>
+  </div>
 
-    <script>
-        function refreshOrders() {
-            console.log("Refreshing orders...");
-            // 实现您的逻辑以刷新订单（可以使用 AJAX 调用）
-        }
+  <script>
+    // 示例: 刷新订单
+    function refreshOrders() {
+      console.log("Refreshing orders...");
+      // TODO: 这里可实现异步刷新逻辑
+    }
 
-        function clearCompletedOrders() {
-            console.log("Clearing completed orders...");
-            fetch('/table/api/clear-completed-orders/', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': '{{ csrf_token }}'
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    console.log(`Deleted ${data.deleted_count} completed orders.`);
-                    const orderContainer = document.getElementById('order-container');
-                    const completedOrders = document.querySelectorAll('.table-card');
-
-                    completedOrders.forEach(card => {
-                        const button = card.querySelector('.mark-done');
-                        if (button && button.style.display === 'none') {
-                            orderContainer.removeChild(card); // 从 DOM 中删除订单卡片
-                        }
-                    });
-
-                    const currentCount = document.querySelectorAll('.table-card').length;
-                    document.getElementById('order-count').innerText = currentCount;
-                } else {
-                    console.error('Failed to clear completed orders:', data.error);
-                }
-            })
-            .catch(error => console.error('Error:', error));
-        }
-
-    function markOrderDone(tableNumber) {
-    console.log(`Marking all orders for table T${tableNumber} as done...`);
-    fetch(`/table/api/mark-all-orders-done/${tableNumber}/`, {
+    // 清除所有已完成订单
+    function clearCompletedOrders() {
+      console.log("Clearing completed orders...");
+      // 请求后端删除所有 status == 'completed' 的订单
+      fetch('/table/api/clear-completed-orders/', {
         method: 'POST',
         headers: {
-            'Content-Type': 'application/json',
-            'X-CSRFToken': '{{ csrf_token }}'
+          'Content-Type': 'application/json',
+          'X-CSRFToken': '{{ csrf_token }}'
         }
-    })
-    .then(response => response.json())
-    .then(data => {
+      })
+      .then(response => response.json())
+      .then(data => {
         if (data.success) {
-            console.log(`All orders for table T${tableNumber} marked as done.`);
-            // 前端移除该桌子对应的卡片
-            const orderCards = document.querySelectorAll('.table-card');
-            orderCards.forEach(card => {
-                // 找到标题含有 "Table Txx" 的卡片
-                const title = card.querySelector('h3')?.textContent || "";
-                if (title.includes(`Table T${tableNumber}`)) {
-                    card.remove();  // 从DOM中彻底移除
-                }
-            });
-        } else {
-            console.error('Failed to mark orders as done:', data.error);
-        }
-    })
-    .catch(error => console.error('Error:', error));
-}
+          console.log("Completed orders cleared in backend.");
 
-    </script>
+          // 前端删除 .card-completed 卡片
+          const completedCards = document.querySelectorAll('.card-completed');
+          completedCards.forEach(card => card.remove());
+
+          // 更新上方订单数量
+          updateOrderCount();
+        } else {
+          console.error('Failed to clear completed orders:', data.error);
+        }
+      })
+      .catch(error => console.error('Error:', error));
+    }
+
+    // 点击后: 向后端发请求完成订单, 并在前端界面切换颜色+按钮文字
+    function markOrderDone(tableNumber) {
+      console.log(`Marking all orders for table T${tableNumber} as done...`);
+      fetch(`/table/api/mark-all-orders-done/${tableNumber}/`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': '{{ csrf_token }}'
+        }
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          console.log(`All orders for table T${tableNumber} marked as done.`);
+
+          // 1) 卡片加上 .card-completed
+          const card = document.getElementById(`table-card-${tableNumber}`);
+          card.classList.add('card-completed');
+
+          // 2) 把按钮文字变为 'Completed'
+          const btn = document.getElementById(`mark-done-${tableNumber}`);
+          btn.textContent = "Completed";
+          btn.classList.remove("mark-done");
+          btn.classList.add("button-completed");
+          btn.disabled = true;
+
+          // 3) 将订单状态文案改为 'Completed'
+          const statusEl = document.getElementById(`order-status-${tableNumber}`);
+          if (statusEl) {
+            statusEl.textContent = "Completed";
+          }
+
+          updateOrderCount();
+        } else {
+          console.error('Failed to mark orders as done:', data.error);
+        }
+      })
+      .catch(error => console.error('Error:', error));
+    }
+
+    // 点击菜名：为元素自身切换删除线 (前端视觉效果)
+    function toggleItemComplete(elem) {
+      elem.classList.toggle('line-through');
+    }
+
+    // 重新计算并更新顶部“Number of orders”
+    function updateOrderCount() {
+      const allCards = document.querySelectorAll('.table-card');
+      const remainingCount = allCards.length;
+      document.getElementById('order-count').innerText = remainingCount;
+    }
+
+    // 页面加载时先统计一次
+    document.addEventListener('DOMContentLoaded', function() {
+      updateOrderCount();
+    });
+  </script>
 </body>
 </html>
+
+
